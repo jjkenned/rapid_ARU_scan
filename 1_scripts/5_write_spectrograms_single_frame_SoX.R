@@ -31,8 +31,8 @@ library(RODBC)
 # you may also want to have a temporary folder 
 
 
-SourceFolder = "E:/PMRA_SAR/Recordings/BIRD/2022/MKVI/MKVI-24" #where your recording files are kept
-OutputFolder =  "E:/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKVI/MKVI-24/raw" # where saving images
+SourceFolder = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2022/MKVI/MKVI-04" #where your recording files are kept
+OutputFolder =  "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKVI/MKVI-04/raw" # where saving images
 
 
 
@@ -46,7 +46,7 @@ meta = songmeter(file.name)
 meta$file.name = full.file
 
 #### Add selection list of files or nights #### 
-LDFC.res <- DBI::dbConnect(RSQLite::SQLite(), "E:/PMRA_SAR/processing/Timelapse_files/LDFCS/BIRD/2022/MKVI/MKVI-24/IndicesProcessing2.ddb")
+LDFC.res <- DBI::dbConnect(RSQLite::SQLite(), "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2022/IndicesProcessing2.ddb")
 
 # if you have a list of nights to process import here
 night.use = tbl(LDFC.res,"DataTable") 
@@ -359,6 +359,7 @@ for (site in unique(meta_2$prefix)){
 }
 
 
+
 # NOw it's time to clip those nasty sox images to the right size
 
 
@@ -367,9 +368,19 @@ for (site in unique(meta_2$prefix)){
 # This function, trims all files within a give directory 
 
 
+# preset values for function 
+dir = OutputFolder
 
+# Image sizing format (and default) is "1500x600+0+600" where 1500(x) = width, (x)600 = height, (+)0 = x offset, (+)600 = y offset
+# x offset is pixels from the left edge of image
+# y offset is pixels from the top edge of image
 
-trim.sox.folder = function(dir,height,width,min,max){
+# Set image Sizing
+image.sizing = "1500x600+0+600" 
+
+# Function 
+
+trim.sox.folder = function(dir,image.sizing){
   
   # tell me what you're doing
   print(paste0("Listing files in ~ ",dir))
@@ -391,19 +402,14 @@ trim.sox.folder = function(dir,height,width,min,max){
   
   image_use = image.frame$images # 
   
-  # set spectrogram sizing 
-  # start by setting x and y pixel count
-  
   
   
   image=image_use[1]
   for (image in image_use){
     
     pic = image_read(image)
-    width = pic.columns
-    height = pic.rows
     
-    out = image_crop(pic,"1500x600+0+600")
+    out = image_crop(pic,image.sizing)
     nameout = gsub(pattern = ".png",replacement = ".jpg",image)
     nameout = gsub(pattern = "/raw/",replacement = "/clipped/",nameout)
     
@@ -419,6 +425,9 @@ trim.sox.folder = function(dir,height,width,min,max){
   
   
 }
+
+
+trim.sox.folder(dir,image.sizing)
 
 
 
