@@ -31,8 +31,13 @@ library(RODBC)
 # you may also want to have a temporary folder 
 
 
+<<<<<<< HEAD
 SourceFolder = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2022/MKVI/MKVI-04" #where your recording files are kept
 OutputFolder =  "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKVI/MKVI-04/raw" # where saving images
+=======
+SourceFolder = "E:/PMRA_SAR/Recordings/BIRD/2022/MKVI/MKVI-06" #where your recording files are kept
+OutputFolder =  "E:/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKVI/MKVI-06/raw" # where saving images
+>>>>>>> 12982ca87e313c2a61ec1088cd57807e9f6180a0
 
 
 
@@ -429,14 +434,16 @@ trim.sox.folder = function(dir,image.sizing){
 
 trim.sox.folder(dir,image.sizing)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 12982ca87e313c2a61ec1088cd57807e9f6180a0
 
 
 
 
 images = list.files(OutputFolder,full.names = T,recursive = T,pattern = ".png")
 
-895
 
 image.frame = data.frame(images)
 
