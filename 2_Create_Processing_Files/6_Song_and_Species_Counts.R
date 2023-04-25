@@ -23,8 +23,10 @@ library(dbplyr)
 library(dplyr)
 
 # Function for moving positive detection frames to new folder
-db.path = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKSC/MKSC-02/clipped/TimelapseData_merged.ddb"
+db.path = "E:/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKDI/MKDI-01/clipped/TimelapseData_merged.ddb"
 sp.list = c("BADO","GHOW","WESO","NOPO","NSWO")
+output.path = "E:/PMRA_SAR/Results/BIRD/2022/MKDI/MKDI-01"
+
 # dest.path = "C:/Users/jeremiah.kennedy/Documents/PMRA/Methods/Protocols/Rapid_Scanning_Training/Song Examples"
 # img.path.ext = dirname(db.path)
 
@@ -35,6 +37,7 @@ RTS.db <- DBI::dbConnect(RSQLite::SQLite(), db.path)
 # if you have a list of nights to process import here
 dat.tbl = dbReadTable(RTS.db,"DataTable")
 dat.tbl = data.frame(dat.tbl)
+
 
 
 ##### is everything completed ##### 
@@ -64,27 +67,37 @@ species.counts = dat.tbl %>% group_by(station,night) %>% summarise(WESO = sum(WE
                                                                    NSWO = sum(NSWO),
                                                                    GHOW = sum(GHOW))
 
+# Save data
+# make path if it doesn't exsist 
+
+if (!dir.exists(output.path)){
+  
+  dir.create(output.path,recursive = T)
+  
+}
+
+# make output name
+filename = paste0(output.path,"/","MKDI-01_2022_Song_Counts.csv")
+
+write.csv(species.nights, file = filename, row.names = F)
+
+
+
+
 # now let's get the station level '# nights with vocalizatrions' values
 
-species.nights = species.counts %>% group_by(station) %>% summarise(WESO = n_distinct(night[WESO>0]),
+species.nights = species.counts %>% group_by(station) %>% summarise(nights_processed = n(),
+                                                                    WESO = n_distinct(night[WESO>0]),
                                                                     BADO = n_distinct(night[BADO>0]),
                                                                     NOPO = n_distinct(night[NOPO>0]),
                                                                     NSWO = n_distinct(night[NSWO>0]),
                                                                     GHOW = n_distinct(night[GHOW>0]))
 
 
+# make output name
+name.nights =  paste0(output.path,"/","MKDI-01_2022_Number_Nights.csv")
 
-write.csv(species.nights, file = "S:/Projects/107182-01/06 Data/ARU processing/Data Output/20230217_GOldenears_Night_Counts.csv",row.names = F)
-
-
-
-
-
-
-
-
-
-
+write.csv(species.nights, file = name.nights,row.names = F)
 
 
 

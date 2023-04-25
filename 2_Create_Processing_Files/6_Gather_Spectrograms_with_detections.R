@@ -23,9 +23,9 @@ library(dbplyr)
 library(dplyr)
 
 # Function for moving positive detection frames to new folder
-db.path = "E:/PMRA_SAR/processing/Timelapse_files/RTS/BIRD/2022/TimelapseData_merged.ddb"
+db.path = "E:/PMRA_SAR/processing/Timelapse_files/RTS/BIRD/2022/MKVI/TimelapseData_merged.ddb"
 sp.list = c("BADO","GHOW","WESO","NOPO","NSWO")
-dest.path = "C:/Users/jeremiah.kennedy/Documents/PMRA/Methods/Protocols/Rapid_Scanning_Training/Song Examples"
+dest.path = "S:/Projects/107182-01/07a Working Folder/Protocols/ARU/Rapid SCan/Rapid_Scanning_Training/Song Examples"
 img.path.ext = dirname(db.path)
 
 dbDisconnect(RTS.db)
