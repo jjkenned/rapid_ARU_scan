@@ -22,10 +22,16 @@ library(RSQLite)
 library(dbplyr)
 library(dplyr)
 
+
+### Clean it up and move the script 
+# Make it a function to bring in multiple locations with data
+
+
+
 # Function for moving positive detection frames to new folder
-db.path = "E:/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKDI/MKDI-01/clipped/TimelapseData_merged.ddb"
+db.path = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKSC/TimelapseData_merged.ddb"
 sp.list = c("BADO","GHOW","WESO","NOPO","NSWO")
-output.path = "E:/PMRA_SAR/Results/BIRD/2022/MKDI/MKDI-01"
+output.path = "D:/PMRA_SAR/Results/BIRD/2022"
 
 # dest.path = "C:/Users/jeremiah.kennedy/Documents/PMRA/Methods/Protocols/Rapid_Scanning_Training/Song Examples"
 # img.path.ext = dirname(db.path)
@@ -33,7 +39,7 @@ output.path = "E:/PMRA_SAR/Results/BIRD/2022/MKDI/MKDI-01"
 # dbDisconnect(RTS.db)
 # connect to database
 RTS.db <- DBI::dbConnect(RSQLite::SQLite(), db.path)
-
+# dbDisconnect(RTS.db)
 # if you have a list of nights to process import here
 dat.tbl = dbReadTable(RTS.db,"DataTable")
 dat.tbl = data.frame(dat.tbl)
@@ -47,8 +53,8 @@ incomplete = dat.tbl %>% group_by(RelativePath,Processed) %>% summarise(count = 
 
 ## Next, group by nights and species 
 # start by creating station and night ID
-dat.tbl$station = substr(dat.tbl$RelativePath,1,11)
-dat.tbl$night = substr(dat.tbl$RelativePath,13,16)
+dat.tbl$station = basename(dirname(dat.tbl$RelativePath))
+dat.tbl$night = basename(dat.tbl$RelativePath)
 
 dat.tbl$WESO = as.numeric(dat.tbl$WESO)
 dat.tbl$BADO = as.numeric(dat.tbl$BADO)
@@ -77,9 +83,9 @@ if (!dir.exists(output.path)){
 }
 
 # make output name
-filename = paste0(output.path,"/","MKDI-01_2022_Song_Counts.csv")
+filename = paste0(output.path,"/","MKSC_2022_Song_Counts.csv")
 
-write.csv(species.nights, file = filename, row.names = F)
+write.csv(species.counts, file = filename, row.names = F)
 
 
 
@@ -95,9 +101,53 @@ species.nights = species.counts %>% group_by(station) %>% summarise(nights_proce
 
 
 # make output name
-name.nights =  paste0(output.path,"/","MKDI-01_2022_Number_Nights.csv")
+name.nights =  paste0(output.path,"/","MKVI_2022_Number_Nights.csv")
 
 write.csv(species.nights, file = name.nights,row.names = F)
+
+
+#### Combine to get basic data
+
+
+# Re-set  your script when needed
+dev.off()
+rm(list=ls())
+
+
+# read in data
+counts = read.csv("S:/Projects/107182-01/06 Data/ARU processing/Data Output/2022/MK_2022_Number_Nights.csv")
+
+# make dataframe to hold results
+
+totals = tidyr::pivot_longer(counts,c("WESO","BADO","NOPO","NSWO","GHOW"),names_to = "Species",values_to = "nights")
+
+review = totals %>% group_by(Species) %>% summarize(individuals = sum(nights>0))
+
+
+final =  paste0(output.path,"/","MK_2022_Total.csv")
+
+write.csv(review, file = final,row.names = F)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
