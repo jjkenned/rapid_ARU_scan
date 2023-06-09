@@ -6,12 +6,12 @@
 
 # Set-Location -Path "D:\PMRA_SAR\Processing\Timelapse_files\LDFCS\BIRD\2022\MKDI\"
 
-$group = "MKSC-01" # station to station basis at this point
+# $group = "MKSC-01" # station to station basis at this point
 
 # set in and out directories 
-$parent_input_dir = "D:\PMRA_SAR\Processing\Timelapse_files\LDFCS\BIRD\2022\MKSC\new_name_indices_n" 
-$input_directories = Get-Childitem -Path "$parent_input_dir\$group"
-$output_directory = "D:\PMRA_SAR\Processing\Timelapse_files\LDFCS\BIRD\2022\MKDI\by_night" # output directory 
+$parent_input_dir = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\2023_WLRS_Contract\processing\new_name_indices" 
+$input_directories = Get-Childitem -Path "$parent_input_dir"
+$output_directory = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\2023_WLRS_Contract\processing\by_night" # output directory 
 $name_filter = "*" # name filter(kinda unsure what it means)
 $time_zone_offset = -0700
 
@@ -43,8 +43,8 @@ foreach ($input_directory in $input_directories) {
     # for more information on how this command works, please see:
     # https://ap.qut.ecoacoustics.info/technical/commands/concatenate_index_files.html
     C:\AP\AnalysisPrograms.exe ConcatenateIndexFiles `
-        --input-data-directory "$parent_input_dir\$group\$current_group" `
-        --output-directory "$output_directory\$group\$current_group" `
+        --input-data-directory "$parent_input_dir\$current_group" `
+        --output-directory "$output_directory\$current_group" `
         -z $time_zone_offset `
         --file-stem-name $current_group `
         --directory-filter "*.*" `
