@@ -38,15 +38,31 @@ Set-Location -Path "E:\processing\copied_recordings\BIRD\2022\MKVI"
 #>
 
 
+<#
+
+Automated scripting section applies to the PMRA higherarchical folder structure (eg. "PMRA_WESOke\PMRA_SAR\Recordings\BIRD\2022\MKVI\")
+If you would like to change the folder structure or apply script to other directory higherarchies, 
+start from the "#set input and output directories" section and set manually
+
+#>
+
 # Set station or station list you want to use
-$group = "REN-02" # station to station basis at this point
+$transect = "MKVI-04" # station to station basis at this point
+$year = "2022"
+$region = $transect.Substring(0,4)
+
+
+# Setup parent directories
+$base_parent_in = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\2022_Nawhitti\recordings"
+$base_parent_out = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\2022_Nawhitti\processing" # set manually if different
+
 
 
 # set input and output directories 
-$parent_input_dir = "F:\PMRA_SAR\Recordings\BIRD\2022\REN" # Audio Recordings
-$input_directories = Get-Childitem -Path "$parent_input_dir"
+$parent_input_dir = "$base_parent_in\PMRA_SAR\Recordings\BIRD\$year\$region\$transect" # Audio Recordings
+$input_directories = Get-Childitem -Path $base_parent_in
 
-$output_directory = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\Processing\Timelapse_files\LDFCS\index_output\BIRD\2022\MKVI\REN\REN-02" # output directory 
+$output_directory = $base_parent_out # output directory 
 $name_filter = "*" # name filter(kinda unsure what it means)
 $time_zone_offset = -0700
 
@@ -62,7 +78,7 @@ $ap_path = "C:\AP"
 $default_configs = Resolve-Path "$ap_path\ConfigFiles"
 
 # check how it works
-$input_directory = $input_directories[1]
+# $input_directory = $input_directories[1]
 
 foreach ($input_directory in $input_directories) {
     Write-Output "Processing $input_directory"
@@ -100,8 +116,8 @@ foreach ($input_directory in $input_directories) {
     # for more information on how this command works, please see:
     # https://ap.qut.ecoacoustics.info/technical/commands/concatenate_index_files.html
     C:\AP\AnalysisPrograms.exe ConcatenateIndexFiles `
-        --input-data-directory "$output_directory/by_rec/$group/$current_group" `
-        --output-directory "$output_directory/by_night/$group/$current_group" `
+        --input-data-directory "$output_directory/by_rec/$current_group" `
+        --output-directory "$output_directory/by_night/$current_group" `
         -z $time_zone_offset `
         --file-stem-name $current_group `
         --directory-filter "*.*" `

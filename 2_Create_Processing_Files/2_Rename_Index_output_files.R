@@ -30,9 +30,9 @@ library(jsonlite)
 library(SciencesPo)
 
 # set file path to location of indices files
-ind.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/LDFCS/index_output/BIRD/2022/MKVI/REN/REN-02/by_rec"
-rec.root = "F:/PMRA_SAR/Recordings/BIRD/2022/REN/REN-02"
-results.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/LDFCS/index_output/BIRD/2022/MKVI/REN/REN-02/new_name_indices"
+ind.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/by_rec"
+rec.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/recordings/2022_Nawhitti"
+results.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/by_rec/new_name_indices"
 
 
 # Get file paths and info 
@@ -155,7 +155,7 @@ start.sec = 0
 
 
 # night = unique(file.grps$night.ID)[1]
-for (night in unique(file.grps$night.ID)){
+for (night in unique(file.grps[file.grps$night.ID>224,]$night.ID)){
   
   
   # night filter
@@ -269,52 +269,52 @@ mapply(change.index.output.names,
 
 # subset
 
-dat_ret = dat_out[320:nrow(dat_out),]
+dat_ret = dat_out[5201:nrow(dat_out),]
 
 mapply(change.index.output.names,
        indices.enclosing.folder = dat_ret$ind.path,
        new.basename = dat_ret$new_name_final,
        old.basename = dat_ret$basename)
-
-
-# make some changes to the json files
-json.list = fs::dir_info(path = "D:/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2022/MKDI/new_name_indices",recurse = T) %>%
-  as_tibble() %>%
-  filter(type=="file",grepl("IndexGenerationData.json",path,ignore.case = T)) %>% # keep files and not folders
-  select(c("path"))
-
-
-
-# now let's rename the files
-# name = json.list$path[1]
-
-
-null.json = function(name){
-  
-  json.old = jsonlite::fromJSON(name,simplifyVector = F)
-  
-  
-  
-
-    
-    
-  lapply(json.old, function(x) if (length(x) == 0) NA else x)
-    
- 
-  
-  
-  
-  json.new = jsonlite::toJSON(json.old,pretty = T,auto_unbox = T,null = "null",na="null")
-  
-  write(json.new,paste0(gsub("IndexGenerationData.json","IndexGenerationData_TEST.json",name)))
-  
-  print(dirname(name))
-  
-  
-  
-}
-
-
+# 
+# 
+# # make some changes to the json files
+# json.list = fs::dir_info(path = "D:/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2022/MKDI/new_name_indices",recurse = T) %>%
+#   as_tibble() %>%
+#   filter(type=="file",grepl("IndexGenerationData.json",path,ignore.case = T)) %>% # keep files and not folders
+#   select(c("path"))
+# 
+# 
+# 
+# # now let's rename the files
+# # name = json.list$path[1]
+# 
+# 
+# null.json = function(name){
+#   
+#   json.old = jsonlite::fromJSON(name,simplifyVector = F)
+#   
+#   
+#   
+# 
+#     
+#     
+#   lapply(json.old, function(x) if (length(x) == 0) NA else x)
+#     
+#  
+#   
+#   
+#   
+#   json.new = jsonlite::toJSON(json.old,pretty = T,auto_unbox = T,null = "null",na="null")
+#   
+#   write(json.new,paste0(gsub("IndexGenerationData.json","IndexGenerationData_TEST.json",name)))
+#   
+#   print(dirname(name))
+#   
+#   
+#   
+# }
+# 
+# 
 
 
 

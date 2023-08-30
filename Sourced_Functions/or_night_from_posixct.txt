@@ -1,0 +1,24 @@
+### Function for converting day-month-year formatted time to ordinal date
+# based on Noon split and Jan 1st midnight - noon is night 1. 
+# this requires lubridate for yday function
+
+or.night = function(date,cutoff_hr){
+  
+  # get lubridate
+  require(lubridate)
+  date = as.POSIXct(date)
+  
+  # part 1 makes datetime into yday
+  or_date = as.numeric(yday(date))
+  
+  # and hour
+  hour = hour(date)
+  
+  # part 2 compares these values
+  if (hour<cutoff_hr){or_night = or_date
+  } else {or_night = or_date + 1}
+  
+  return(or_night)
+
+  
+}
