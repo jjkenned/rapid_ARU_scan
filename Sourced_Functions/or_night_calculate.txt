@@ -1,0 +1,16 @@
+### Function for converting day-month-year formatted time to ordinal date
+# based on Noon split and Jan 1st midnight - noon is night 1. 
+# this requires lubridate for yday function
+
+or.night = function(day,month,year,hour,cutoff_hr){
+  
+  # part 1 makes date into yday
+  or_date = yday(as.Date(paste(day,month,year,sep = "-"),format = "%d-%m-%Y"))
+  
+  if (hour<cutoff_hr){or_night = or_date
+  } else {or_night = or_date + 1}
+  
+  return(or_night)
+
+  
+}
