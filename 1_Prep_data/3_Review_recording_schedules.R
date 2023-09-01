@@ -32,7 +32,7 @@ library(terra)
 library(geosphere)
 
 # set some directories
-prnt.source = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/recordings/2022_Nawhitti") # Base folder with recordings present 
+prnt.source = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023/MKSC") # Base folder with recordings present 
 project.dir = c("C:/Users/jeremiah.kennedy/Documents/PMRA/Code/rapid_ARU_scan") # directory for your R project 
 jpg.dir = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/final_schedule_vis") # where the nightly recording schedule visualizations are to be kept 
 GPS.Locs = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking/ARU_Locations.csv" # aru locations
@@ -116,6 +116,8 @@ meta_alt = plyr::mdply(all.recs$Full, #
 # before moving on, you may want to see what files, didnt work 
 meta_alt$filename[!is.na(meta_alt$notes)]
 
+dir.create(dirname("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Results/Tracking/BIRD/2023/MKSC/Meta_Data_Recordings.csv"),recursive = T)
+write.csv(meta_alt,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Results/Tracking/BIRD/2023/MKSC/Meta_Data_Recordings.csv")
 
 meta_alt = read.csv(file.path("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking",
                               "Full_WAMD_GUANO_EXIF.csv"))
