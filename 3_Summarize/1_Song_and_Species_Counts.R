@@ -29,7 +29,8 @@ library(dplyr)
 
 
 # Function for moving positive detection frames to new folder
-db.path = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKSC/TimelapseData_merged.ddb"
+db.path = "D:/PMRA_SAR/processing/Timelapse_files/RTS/BIRD/2022/TimelapseData_merged.ddb"
+# db.path = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/MKSC/TimelapseData_merged.ddb"
 sp.list = c("BADO","GHOW","WESO","NOPO","NSWO")
 output.path = "D:/PMRA_SAR/Results/BIRD/2022"
 

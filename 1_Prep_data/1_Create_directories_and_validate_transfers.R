@@ -10,12 +10,12 @@ rm(list=ls())
 
 
 #### First section of script is for creating directories for recording files to go to #####
-destination.parent = "D:/PMRA_SAR/Recordings"
+destination.parent = "E:/PMRA_SAR/Recordings"
 year = "2023"
 
 ###### Build comparison pairs for now and for transfer validation ###### 
-SD.pair=data.frame(SD=c("G:/","H:/"))
-SD.pair$station = c("MKVI-24-S12","MKVI-24-S13")
+SD.pair=data.frame(SD=c("F:/","G:/","D:/"))
+SD.pair$station = c("MKVI-08-S01","MKVI-08-S01","MKVI-08-S03")
 
 
 # create directory function

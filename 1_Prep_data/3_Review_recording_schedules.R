@@ -15,6 +15,42 @@
 dev.off()
 rm(list=ls())
 
+<<<<<<< HEAD
+# Base folder with recordings present 
+recs.loc = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/recordings/2022_Nawhitti")
+
+#### First trial of this component of script ######
+# List files in location
+files = data.frame(Full_name = list.files(path = recs.loc,all.files = T,full.names = T,recursive = T, pattern = ".wav"))
+
+# Get Meta data 
+meta = songmeter(basename(files$Full_name)) 
+meta$recording = basename(files$Full_name) # append recording name
+meta$full_name = files$Full_name # append full file path
+
+
+# Get ordinal date
+orday = yday(as.Date(paste0(file.grps$year[i],"-",file.grps$month[i],"-",file.grps$day[i])))
+
+
+
+# Summarize by nights, volume of data and locations
+file.grps = meta %>% group_by(prefix,year,month,day) %>% mutate(group_id = cur_group_id()) # group by date
+# quick function for translating day number into night number 
+# day = night ID, hr = hour in 24 hr clock (as integer), split = when to cut off the nights from one another (usually 12...noon)
+d2n.func = function(day,hr,split){
+  
+  if (hr<split){night = day} else (night = day+1)
+  
+  return(night)
+  
+}
+
+
+
+
+
+=======
 # set Timezone
 Sys.setenv(TZ = "Etc/GMT+8") # "https://www.ibm.com/docs/en/cloudpakw3700/2.3.0.0?topic=SS6PD2_2.3.0/doc/psapsys_restapi/time_zone_list.htm"
 Sys.timezone() # check
@@ -1174,5 +1210,6 @@ length.check = sessions %>% group_by(status,length) %>% summarise(count = n())
 
 
 
+>>>>>>> 8c2ed3a928fcd71ec397fda3a0484fb1a4726dd7
 
 
