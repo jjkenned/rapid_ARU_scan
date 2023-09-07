@@ -23,7 +23,7 @@ library(fs)
 # define locations for 
 prt.dest = "S:/Projects/107182-01/07a Working Folder/Protocols/ARU/Rapid SCan/Rapid_Scanning_Training/R_Output" # parent directory of training material
 
-prt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR" # parent directory of material to move, matching depth of prt.train depth
+prt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023" # parent directory of material to move, matching depth of prt.train depth
 
 out.dirs = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Training/Transferring_Files/Jamie","S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Training/Transferring_Files/Kelsey")
 
@@ -162,27 +162,91 @@ for (i in 1:nrow(move)){
   
 }
 
+#### IF you move spectrograms from other machines and want to transfer audio files only using this machine,
+#### then go move the spetrograms now and come back and re-read the file list in the destination folder from here down
+# if not, skip this section
+# either way worth saving this tracking file
+# write.csv(dat.tbl,"S:/Projects/107182-01/07a Working Folder/Protocols/ARU/Rapid SCan/Rapid_Scanning_Training/R_Output/RTS_Spec_Transfer_For_Jamie_Kelsey.csv",row.names = F)
+
+# List all files prestent in destenation folder
+move = read.csv("S:/Projects/107182-01/07a Working Folder/Protocols/ARU/Rapid SCan/Rapid_Scanning_Training/R_Output/RTS_Spec_Transfer_For_Jamie_Kelsey.csv")
+move = move[c("File","DateTime","station","night","Full.spec","dest.path","new_path","rec_name")]
+
+# list files themselves
+files = data.frame(Full.jpg = list.files("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Training/Transferring_Files",recursive = T,full.names = T))
+files$jpg = basename(files$Full.jpg)
+
+
+jpg_wav_rnm = function(jpg.name){
+  
+  spread = unlist(strsplit(jpg.name,"_"))
+  end = tail(spread,1)
+  wav = gsub(paste0("_",end),".wav",jpg.name)
+  
+  return(wav)
+  
+}
+
+files$rec.base = sapply(files$jpg, jpg_wav_rnm)
 
 
 # Now recordings
 # find the recordings in the source location
 recs = data.frame(Full = list.files(prt.source,recursive = T,pattern = ".wav",full.names = T))
-move$Full.rec = recs[basename(recs$Full) %in% move$rec_name,]
+recs.move = data.frame(Full = unique(recs[basename(recs$Full) %in% files$rec.base,]))
 
-move$rec.new = NA
+
+
+recs.move$rec.new = NA
 
 
 # loop through files to make the new name
-for(i in 1:nrow(move)){
+
+
+recs.ret = list()
+
+for (d in 1:length(out.dirs)){
   
-  move$rec.new[i] = gsub(prt.source,move$dest.path[i],move$Full.rec[i])
+  
+  recs.out = recs.move
+  recs.out$dest.path = out.dirs[d]
+  
+  for(i in 1:nrow(recs.out)){
+    
+    recs.out$rec.new[i] = gsub(prt.source,recs.out$dest.path[i],recs.out$Full[i])
+    
+    
+  }
+  
+  recs.ret[[d]] = recs.out
   
   
-   
+  
   
   
   
 }
+
+new.recs = do.call(rbind,recs.ret)
+
+# now we can loop through again and move them
+
+for (i in 1:nrow(new.recs)){
+  
+  if(!exists(dirname(new.recs$rec.new[i]))){dir.create(dirname(new.recs$rec.new[i]),recursive = T)}
+  
+  file_copy(new.recs$Full[i],new.recs$rec.new[i])
+  
+  if(i%%100==0){cat("\n\nCOmpleted",i,"of",nrow(new.recs))
+    } else if(i == nrow(new.recs)){cat("\n\nCOmpleted",i,"of",nrow(new.recs))}
+  
+  
+  
+}
+
+write.csv(new.recs,file = "S:/Projects/107182-01/07a Working Folder/Protocols/ARU/Rapid SCan/Rapid_Scanning_Training/R_Output/RTS_Recording_Training_Transfer_For_Jamie_Kelsey.csv")
+
+
 
 # quick check if any overlap 
 spec_duplicates = data.frame(table(dat.tbl$File))
