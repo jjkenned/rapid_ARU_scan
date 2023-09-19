@@ -29,6 +29,8 @@ read.results = function(paths){
 prt.dest = file.path("S:/Projects/107182-01/07a Working Folder/Protocols/ARU/Rapid SCan/Rapid_Scanning_Training/R_Output")
 
 
+file.long = data.table::melt(data.table(file),id.vars = c("File","Obs.ID"),measure.vars = c(comps.cols))
+
 
 
 

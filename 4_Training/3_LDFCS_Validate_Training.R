@@ -16,7 +16,10 @@ library(RSQLite)
 library(RODBC)
 library(DBI)
 library(fs)
+library(data.table)
 
+
+#### Part 1 #####
 
 ### Get applicable .db paths
 ## DB's should be in the same format (template) to compare multiple
@@ -36,28 +39,11 @@ prt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contra
 
 daughters = c("CC","TS")
 
-get.paths = function(daughter,parent){
-  
-  parent = data.frame(parent = c(file.path(parent,daughter)))
-  
-  
-  
-  
-}
-
-
-
-prt.sources = data.frame(parent = c(file.path(prt.source,daughter.1),
-                                    file.path(prt.source,daughter.2)))
-
-
-
 prt.sources = lapply(daughters,FUN = function(x) file.path(prt.source,x))
+prt.sources = do.call(rbind,prt.sources)
 
 
-# prt.sources[2,]
-
-# Get db paths from enclosing folder
+# get DB paths
 
 # i=1
 for (i in 1:nrow(prt.sources)){
@@ -77,6 +63,16 @@ for (i in 1:nrow(prt.sources)){
   
 }
 
+
+
+
+##### Option 2 ##########
+# just define paths you want to use here
+# db.paths = c("db.fullname.1","db.fullname.2")
+
+
+#### Part 2 #####
+# Extract results 
 
 # loop to extract data that you want
 for (i in 1:length(db.paths)){
@@ -104,10 +100,91 @@ for (i in 1:length(db.paths)){
 }
 
 
+##### Part 3 #### 
+# Confirm that processors used the right terms and buttons
+
+table(dat.out$Training)
+table(dat.out$Process)
+table(dat.out$trainee.path) # got all data you want?
+table(dat.out$Comments)
+
+# list comments you want to explore
+comments = c("clipped short, no ratings","incomplete LDFCS; no ratings","na","Not processed","Not reviewed")
+
+check = dat.out[dat.out$Comments %in% comments,]
+check = check[c("File","Comments")]
+
+# now remove frames that are not present for both
+# Im filtering by check because I dont want any of them
+
+remove = check$File
+
+dat.out = dat.out[!dat.out$File %in% remove,]
+
+# make sure the same is present for each
+# there should be exactly 2 per image
+compare = dat.out %>% group_by(File) %>% summarise(count = n())
+
+# random assign names for this group
+# if list gets longer then two you will want to expand into loop or function 
+table(dat.out$trainee.path)
+dat.out$Obs.ID = NA
+
+dat.out$Obs.ID[dat.out$trainee.path == "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/Training/CC/
+               Timelapse_files/LDFCS/BIRD/2022/MKSC/IndicesProcessing4.ddb"] = daughters[1]
+
+dat.out$Obs.ID[dat.out$trainee.path == "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/Training/TS/
+               Timelapse_files/LDFCS/BIRD/2022/MKSC/IndicesProcessing4.ddb"] = daughters[2]
 
 
 
-### Apply function to get the database pathways
+
+# get rid of columns you dont want
+dat.out = dat.out[!colnames(dat.out) %in% c("DeleteFlag","RelativePath","DateTime","Process","Training")]
+
+
+### New DF for only image IDs and to keep difference values
+comp.meas = data.frame(File = unique(dat.out$File))
+
+
+## compare function
+# This function groups the values by file name and observer ID and outputs a comparison dataframe for each field to compare 
+# using the user-defined comparison metric between the observers
+# with two you can do differences
+# with more you will need to use more complicated values
+# Normalized distribution away from a 'true value'
+
+
+## compare
+file.long = data.table::melt(data.table(file),id.vars = c("File","Obs.ID"),measure.vars = c(comps.cols),value.name = "measure",variable.name = "source")
+
+long.comp = dcast(file.long,File + source ~ Obs.ID, value.var = "measure")
+
+long.comp$diff = NA
+
+for (i in 1:nrow(long.comp)){
+  
+  long.comp$diff[i] = diff(c(as.numeric(long.comp[i,3]), as.numeric(long.comp[i,4])))
+  
+  
+}
+
+# Now use something else
+summary = long.comp %>% group_by(source) %>% summarise(max = max(abs(diff)),
+                                                       min = min(abs(diff)),
+                                                       mean = mean(abs(diff)),
+                                                       median = median(abs(diff)))
+
+
+
+plot = ggplot(long.comp, aes(x=diff)) + geom_histogram(binwidth=.5) +
+  facet_wrap(~source, ncol = (n_distinct(long.comp$source)/2))
+
+#ggsave(filename = paste0(prt.source,"/","CC_TS_LDFSC_Comparison_plot.png"),plot = plot)
+
+#write.csv(long.comp,file = paste0(prt.source,"/","CC_TS_LDFSC_Results.csv"))
+
+#write.csv(summary,file = paste0(prt.source,"/","CC_TS_LDFSC_Results_SummaryFIle.csv"))
 
 
 

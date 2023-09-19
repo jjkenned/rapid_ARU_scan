@@ -28,6 +28,8 @@ library(lubridate)
 library(ggrepel)
 # detach("package:terra",unload = T)
 
+
+
 ####  working spaces
 # Set locations for source folder and destination folder 
 # you may also want to have a temporary folder 
@@ -104,6 +106,19 @@ p_min_60 = 12 # 46-60min
 separator = 15 # 15 minutes
 
 
+
+# testing 
+params = list(n_max_15 = 2,
+              n_max_30 = 2,
+              n_max_45 = 3,
+              n_max_60 = 4,
+              p_min_15 = 9,
+              p_min_30 = 9, 
+              p_min_45 = 12,
+              p_min_60 = 12)
+
+
+
 sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_focus,min_pause,...){
   
   # Make quick function to format dates and times quicker
@@ -165,7 +180,7 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
   
   
   
-  p_f_combos = data_frame(expand_grid(p_choices = seq(p_min,p_max,60), f_choices = seq(f_min,f_max,60)))
+  p_f_combos = tibble(expand_grid(p_choices = seq(p_min,p_max,60), f_choices = seq(f_min,f_max,60)))
   
   # fill in the number of rec sessions (n)
 
@@ -179,6 +194,7 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
   
   # check and apply p.min and n.max values for each time frame applied
   params = list(...) # list parameters
+  
   # params = tester
   params$name = gsub(".","_",params$name)
   
