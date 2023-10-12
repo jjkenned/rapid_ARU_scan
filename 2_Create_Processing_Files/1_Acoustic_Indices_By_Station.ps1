@@ -47,14 +47,23 @@ start from the "#set input and output directories" section and set manually
 #>
 
 # Set station or station list you want to use
+<<<<<<< HEAD
 $transect = "MKVI-21" # station to station basis at this point
+=======
+$transect = "MKSC-02" # station to station basis at this point
+>>>>>>> 2993139175f9945ff72f21bb7f76354c5d195946
 $year = "2023"
 $region = $transect.Substring(0,4)
 
 
 # Setup parent directories
+<<<<<<< HEAD
 $base_parent_in = "F:"
 $base_parent_out = "F:" # set manually if different
+=======
+$base_parent_in = "S:\ProjectScratch\398-173.07\PMRA_WESOke"
+$base_parent_out = "S:\ProjectScratch\398-173.07\PMRA_WESOke" # set manually if different
+>>>>>>> 2993139175f9945ff72f21bb7f76354c5d195946
 
 
 
@@ -62,7 +71,11 @@ $base_parent_out = "F:" # set manually if different
 $parent_input_dir = "$base_parent_in\PMRA_SAR\Recordings\BIRD\$year\$region\$transect" # Audio Recordings
 $input_directories = Get-Childitem -Path $parent_input_dir
 
+<<<<<<< HEAD
 $output_directory = "$base_parent_out\PMRA_SAR\Recordings\BIRD\$year\$region\$transect" # output directory 
+=======
+$output_directory = "$base_parent_out\PMRA_SAR\Processing\BIRD\$year\$region" # output directory 
+>>>>>>> 2993139175f9945ff72f21bb7f76354c5d195946
 $name_filter = "*" # name filter(kinda unsure what it means)
 $time_zone_offset = -0700
 

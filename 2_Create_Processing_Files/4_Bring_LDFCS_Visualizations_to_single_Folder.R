@@ -27,8 +27,13 @@ dir_return_base = "F:/PMRA_SAR/Processing/Timelapse_Files/LDFCS/BIRD/2023/MKVI/F
 
 # group = "MKSC-U01-006"
 
+<<<<<<< HEAD
 dir_sep = "F:/PMRA_SAR/Processing/indices/BIRD/2023/MKVI/MKVI-21/by_night" # where the files are kept
 dir_return = "F:/PMRA_SAR/Processing/Timelapse_Files/LDFCS/BIRD/2023/MKVI/MKVI-21" # where the combined files are to go
+=======
+dir_sep = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD/2023/MKSC/by_night" # where the files are kept
+dir_return = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2023/MKSC" # where the combined files are to go
+>>>>>>> 2993139175f9945ff72f21bb7f76354c5d195946
 
 
 

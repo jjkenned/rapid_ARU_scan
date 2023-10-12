@@ -12,6 +12,7 @@
 
 
 
+
 # Re-set  your script when needed
 dev.off()
 
@@ -27,6 +28,7 @@ library(seewave)
 library(lubridate)
 library(rjson)
 library(jsonlite)
+<<<<<<< HEAD
 #library(SciencesPo)
 detach("package:plyr",unload = T)
 
@@ -34,6 +36,20 @@ detach("package:plyr",unload = T)
 ind.root = "F:/PMRA_SAR/Processing/indices/BIRD/2023/MKVI/MKVI-24/by_rec"
 rec.root = "F:/PMRA_SAR/Recordings/BIRD/2023/MKVI/MKVI-24"
 results.root = "F:/PMRA_SAR/Processing/indices/BIRD/2023/MKVI/MKVI-24/new_name_indices"
+=======
+library(warbleR)
+#library(SciencesPo)
+
+# set file path to location of indices files
+ind.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD/2023/MKSC/by_rec/MKSC-01"
+rec.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023/MKSC/MKSC-01"
+results.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Name_Change_Tracking/BIRD/2023/MKSC/MKSC-01/new_name_indices"
+
+# get rid of problem files before running script
+
+
+# Get depth that ends with 'towsey.acoustic
+>>>>>>> 2993139175f9945ff72f21bb7f76354c5d195946
 
 
 # Get file paths and info 
@@ -57,6 +73,7 @@ colnames(recs) = "rec.path"
 ## quick check the legnths and see what's missing
 nrow(paths) == nrow(recs)
 
+
 # now combine by the basename of the files 
 paths$basename = basename(paths$ind.path) # Base name of indices folder
 recs$basename = basename(recs$rec.path)
@@ -68,7 +85,12 @@ paths = pathstest
 
 # extract metadata required
 paths$rec.name = gsub(".wav","",paths$basename) # get rid of wav name
-meta = separate(paths,rec.name,into = c("station","date","time"),sep = "_") # get recording time, date and location data
+
+# contingencies for SM3s
+# make a baseline rec name that removes sm3 issues
+paths$base.rec = gsub("*_0\\+1_*","_",paths$rec.name)
+
+meta = separate(paths,base.rec,into = c("station","date","time"),sep = "_") # get recording time, date and location data
 meta$transect = substr(meta$station,1,7)
 
 ###### Dates are frustrating ###### 
@@ -192,7 +214,7 @@ for (night in unique(file.grps$night.ID)){
   }
   
   # save as some other dataframe  
-  if (night == unique(file.grps$night.ID)[1]) {dat_out = night_dat} else (dat_out = rbind(dat_out,night_dat))
+  if (night == unique(file.grps$night.ID)[1]) {dat_out = data.frame(night_dat)} else (dat_out = rbind(dat_out,data.frame(night_dat)))
   
   print(paste0("complete night ",night," of ",max(unique(file.grps$night.ID)))) # nights may not line up propperly 
   
@@ -213,15 +235,25 @@ dat_out$new_name_final = paste0(dat_out$station,"_",dat_out$year,
  ###
 # Save this massive list 
 dir.create(results.root,recursive = T)
-write.table(dat_out,file = paste0(results.root,"/Old_New_NameConverstions.txt"),sep = "/t",col.names = T,row.names = F)
+write.table(dat_out,file = paste0(results.root,"/Old_New_NameConverstions.txt"),sep = "\t",col.names = T,row.names = F)
+
+# read data if needed to re-run
+# dat_out = read.table("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD/2023/MKSC/by_rec/MKSC-01/new_name_indices/Old_New_NameConverstions.txt",sep = "\t",header = T)
+
+
+###### MKSC-01-S10 check what we can chagne properly # didnt change first time
+
+
+
+
 
 
 # now list and rename things
 
 ## for testing
-indices.enclosing.folder = dat_out$ind.path[1]
-new.basename = dat_out$new_name_final[1]
-old.basename = dat_out$basename[1]
+# indices.enclosing.folder = dat_out$ind.path[1]
+# new.basename = dat_out$new_name_final[1]
+# old.basename = dat_out$basename[1]
 
 
 # Function
@@ -269,6 +301,7 @@ mapply(change.index.output.names,
        old.basename = dat_out$basename)
 
 # subset
+<<<<<<< HEAD
 # 
 # dat_ret = dat_out[5201:nrow(dat_out),]
 # 
@@ -276,6 +309,15 @@ mapply(change.index.output.names,
 #        indices.enclosing.folder = dat_ret$ind.path,
 #        new.basename = dat_ret$new_name_final,
 #        old.basename = dat_ret$basename)
+=======
+
+#dat_ret = dat_out[5201:nrow(dat_out),]
+
+#mapply(change.index.output.names,
+       #indices.enclosing.folder = dat_ret$ind.path,
+       #new.basename = dat_ret$new_name_final,
+       #old.basename = dat_ret$basename)
+>>>>>>> 2993139175f9945ff72f21bb7f76354c5d195946
 # 
 # 
 # # make some changes to the json files

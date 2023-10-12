@@ -1,8 +1,8 @@
-##################################################
-########### Quick move files ################
-##################################################
+###############################################################################################
+########### Validate Training Results from the LDFCS Standard Training Dataset ################
+###############################################################################################
 
-## This script is for quickly moving files from one location to another
+## This script is for validating processing results from LDFCS training 
 # usually for training purposes
 
 # Re-set  your script when needed
@@ -10,29 +10,186 @@ dev.off()
 rm(list=ls())
 
 
-# libs
+# libraries
 library(tidyverse)
 library(RSQLite)
 library(RODBC)
 library(DBI)
 library(fs)
+library(data.table)
 
 
-# Move files to training folder
+#### Part 1 #####
 
-# define locations for 
-prt.dest = "S:/Projects/107182-01/07a Working Folder/Protocols/ARU/Rapid SCan/Rapid_Scanning_Training/R_Output" # parent directory of training material
-
-prt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023" # parent directory of material to move, matching depth of prt.train depth
-
-out.dirs = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Training/Transferring_Files/Jamie","S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Training/Transferring_Files/Kelsey")
-
-db.paths = c("D:/PMRA_SAR/processing/Timelapse_files/RTS/BIRD/2022/TimelapseData_merged.ddb")
-
-# db.path = "D:/PMRA_SAR/processing/Timelapse_files/RTS/BIRD/2022/TimelapseData_merged.ddb"
-# db.path.2 ="S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/CoastOwlsBC.ddb"
+### Get applicable .db paths
+## DB's should be in the same format (template) to compare multiple
 
 
+##### Option 1 ##########
+## Extract db paths from one parent directory DIRECTLY enclosing multiple (identically layed out) subdirectories 
+
+## define locations for 
+# parent directory of training material to move
+prt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/Training"
+
+
+# add sub-directories as needed (can be longer than one file)
+# These can be of any length, but must be identical in depth (ideally)
+# it can work without, but gets a little more complicated 
+
+daughters = c("CC","TS")
+
+prt.sources = lapply(daughters,FUN = function(x) file.path(prt.source,x))
+prt.sources = do.call(rbind,prt.sources)
+
+
+# get DB paths
+
+# i=1
+for (i in 1:nrow(prt.sources)){
+  
+  
+  path = data.frame(full = list.files(path = prt.sources[i,],pattern = ".ddb",recursive = T,full.names = T,all.files = T))
+  
+  path$lengths = lengths(regmatches(path$full, gregexpr("/", path$full)))
+  
+  
+  db.path = path[path$lengths==min(path$lengths),]$full
+
+  
+  if(i == 1){db.paths = c(db.path)}else(db.paths = c(db.paths,db.path))
+  
+  
+  
+}
+
+
+
+
+##### Option 2 ##########
+# just define paths you want to use here
+# db.paths = c("db.fullname.1","db.fullname.2")
+
+
+#### Part 2 #####
+# Extract results 
+
+# loop to extract data that you want
+for (i in 1:length(db.paths)){
+  
+  cat("~~~~~\n\n")
+  cat("Starting",db.paths[i])
+  
+  
+  RTS.db <- DBI::dbConnect(RSQLite::SQLite(), db.paths[i])
+  
+  # Read data from specified table
+  dat.tbl = dbReadTable(RTS.db,"DataTable")
+  dat.tbl = data.frame(dat.tbl)
+  # dat.tbl = dat.tbl[dat.tbl$Processed=="true",]
+  
+  dbDisconnect(RTS.db) # disconnect after extracted
+  
+  # get individual IDs for this
+  dat.tbl$trainee.path = db.paths[i]
+  
+  if(i==1){dat.out = dat.tbl}else(dat.out = rbind(dat.out,dat.tbl))
+  
+  
+  
+}
+
+
+##### Part 3 #### 
+# Confirm that processors used the right terms and buttons
+
+table(dat.out$Training)
+table(dat.out$Process)
+table(dat.out$trainee.path) # got all data you want?
+table(dat.out$Comments)
+
+# list comments you want to explore
+comments = c("clipped short, no ratings","incomplete LDFCS; no ratings","na","Not processed","Not reviewed")
+
+check = dat.out[dat.out$Comments %in% comments,]
+check = check[c("File","Comments")]
+
+# now remove frames that are not present for both
+# Im filtering by check because I dont want any of them
+
+remove = check$File
+
+dat.out = dat.out[!dat.out$File %in% remove,]
+
+# make sure the same is present for each
+# there should be exactly 2 per image
+compare = dat.out %>% group_by(File) %>% summarise(count = n())
+
+# random assign names for this group
+# if list gets longer then two you will want to expand into loop or function 
+table(dat.out$trainee.path)
+dat.out$Obs.ID = NA
+
+dat.out$Obs.ID[dat.out$trainee.path == "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/Training/CC/
+               Timelapse_files/LDFCS/BIRD/2022/MKSC/IndicesProcessing4.ddb"] = daughters[1]
+
+dat.out$Obs.ID[dat.out$trainee.path == "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/Training/TS/
+               Timelapse_files/LDFCS/BIRD/2022/MKSC/IndicesProcessing4.ddb"] = daughters[2]
+
+
+
+
+# get rid of columns you dont want
+dat.out = dat.out[!colnames(dat.out) %in% c("DeleteFlag","RelativePath","DateTime","Process","Training")]
+
+
+### New DF for only image IDs and to keep difference values
+comp.meas = data.frame(File = unique(dat.out$File))
+
+
+## compare function
+# This function groups the values by file name and observer ID and outputs a comparison dataframe for each field to compare 
+# using the user-defined comparison metric between the observers
+# with two you can do differences
+# with more you will need to use more complicated values
+# Normalized distribution away from a 'true value'
+
+
+## compare
+file.long = data.table::melt(data.table(file),id.vars = c("File","Obs.ID"),measure.vars = c(comps.cols),value.name = "measure",variable.name = "source")
+
+long.comp = dcast(file.long,File + source ~ Obs.ID, value.var = "measure")
+
+long.comp$diff = NA
+
+for (i in 1:nrow(long.comp)){
+  
+  long.comp$diff[i] = diff(c(as.numeric(long.comp[i,3]), as.numeric(long.comp[i,4])))
+  
+  
+}
+
+# Now use something else
+summary = long.comp %>% group_by(source) %>% summarise(max = max(abs(diff)),
+                                                       min = min(abs(diff)),
+                                                       mean = mean(abs(diff)),
+                                                       median = median(abs(diff)))
+
+
+
+plot = ggplot(long.comp, aes(x=diff)) + geom_histogram(binwidth=.5) +
+  facet_wrap(~source, ncol = (n_distinct(long.comp$source)/2))
+
+#ggsave(filename = paste0(prt.source,"/","CC_TS_LDFSC_Comparison_plot.png"),plot = plot)
+
+#write.csv(long.comp,file = paste0(prt.source,"/","CC_TS_LDFSC_Results.csv"))
+
+#write.csv(summary,file = paste0(prt.source,"/","CC_TS_LDFSC_Results_SummaryFIle.csv"))
+
+
+
+
+#### 
 
 # read in names of nights to move data from
 chosen = read.csv(file.path(prt.dest,"Training_List_Station_Nights_2022.csv"))
@@ -140,7 +297,6 @@ get_specs = function(db.paths,table.name,chosen){
   
 }
 
-
 # Apply function
 dat.tbl = get_specs(db.paths,"DataTable",chosen)
 
@@ -152,7 +308,7 @@ for (i in 1:nrow(move)){
   
   if(!exists(dirname(move$new_path[i]))){
     
-    dir.create(dirname(move$new_path[i]),recursive = T)
+    dir.create(dirname(move$new_path[i]))
     
   }
   

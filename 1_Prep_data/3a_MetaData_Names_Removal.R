@@ -1,23 +1,41 @@
 ###########################################################
-########### Visualize recording schedules  ################
+########### Organize and Clean Recordings  ################
 ###########################################################
 
+
+## This is basically the first script dealing with recordings in their final storage/processing locations
+
 ## This script is for:
-## - Determining/describing recording schedule
-## - Exploring recording schedules within a set of recordings to find inconsistencies  
-##  - in time of year (date)
-##  - between Stations within a transect (or other deployment type)
-##  - between actual and expected recording schedule 
+# ~ Retrieving Meta data from wav files (GUANO and WAMD)
+# ~ Finding and removing/storing corrupted/empty files
+# ~ Creating new 'basic name' for recording to keep names the same between recorder types and name formats
+# - Storing all this data in a place to be retrieved in later scripts and processing
+
+# This script should only need to be run once on your entire data set if applied properly
+# it can, however, be run on individual directories quite easily to break appart the processing
+
+
+##### PRE-SCRIPT WARNINGS ###### 
+# ~ Make sure to check what kind of recordings you're collecting 
+#   - Define this in recording types early in the script
+#   - 
 
 
 
-# Re-set  your script when needed
+## Resets ## 
+# Reset your script when needed
 dev.off()
 rm(list=ls())
 
 # set Timezone
 Sys.setenv(TZ = "Etc/GMT+8") # "https://www.ibm.com/docs/en/cloudpakw3700/2.3.0.0?topic=SS6PD2_2.3.0/doc/psapsys_restapi/time_zone_list.htm"
 Sys.timezone() # check
+
+
+## Packages ##
+# ~ Install if you don't already have them installed
+# ~ install.packages(c("RSQLite","exifr","suncalc","tidyverse","lubridate"))
+
 
 # library what is needed
 library(stringr)
@@ -30,99 +48,45 @@ library(exifr)
 library(suncalc)
 library(terra)
 library(geosphere)
-library(plyr)
+library(RSQLite)
 
-# set some directories
-prnt.source = c("F:/PMRA_SAR/Recordings/BIRD/2023/MKVI") # Base folder with recordings present 
-project.dir = c("C:/Users/jeremiah.kennedy/Documents/PMRA/Code/rapid_ARU_scan") # directory for your R project 
-jpg.dir = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/final_schedule_vis_2") # where the nightly recording schedule visualizations are to be kept 
-GPS.Locs = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking/ARU_Locations.csv" # aru locations
 
-# and time settings
-time_format = "%Y-%m-%d %H:%M:%S%z"
-timezone = "Etc/GMT+8"
+## set directories ##
 
-#str(meta_2$timestamp)
+# Recording and input directories
+prnt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023/MKSC" # Base folder with recordings present 
 
-# get functions
-or.night = function(date_time,cutoff_hour,timezone){
-  
-  # get lubridate
-  require(lubridate)
-  date_time = as.POSIXct(date_time, tz = timezone)
-  
-  
-  # part 1 makes datetime into yday
-  or_date = as.numeric(yday(date_time))
-  
-  # and hour
-  hour = hour(date_time)
-  
-  # part 2 compares these values
-  if (hour<cutoff_hour){or_night = or_date
-  } else {or_night = or_date + 1}
-  
-  return(or_night)
-  
-  
-}
+# MetaData and output directories
+base.meta.dir = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData" 
+GPS.Locs = file.path(base.meta.dir,"External","20231011_Location_Info.csv") # aru locations
 
-source(paste0(project.dir,"/Sourced_Functions/Get_wamd_GUANO_4.R"))
+
+
+## Functions ##
+
+# ~ Sourced from project folder
+# if not using 'RStudio Project ~ rapid_ARU_scan' modify path to location of the following function on your computer
+source("Sourced_Functions/Get_wamd_GUANO_4.R")
+
+## File Types ##
+# Define File types for audio recordings to be encountered
+file.types = c(".wav",".wac",".mp3",".flac",".w4v")
 
 
 
 
 
-
-
-#### Skip to ~~ Time Manipulation ~~ (approx. line 530) on subsequent runs, once completed first time
-
-
-
-
-
-
-
-
-
-#### ~~ Check directory consistency ~~  ######
-
-# set intermediate directories
-## IMPORTANT NOTE: This won't work if you don't at least have all recordings kept in the same depth of directories throughout the parent directory 
-# Functions
-# Gathers intermediate directory depth based on where the recordings are kept and how the prnt.source (parent directory) is defined
-get.dir.depth = function(prnt.source){
-  
-  all.dirs = data.frame(Full = list.dirs(prnt.source,recursive = T,full.names = T)) # full names of directories present
-  all.dirs$depth <- lengths(strsplit(all.dirs$Full, "/")) # get directory depth 
-  all.dirs = all.dirs[all.dirs$depth == max(all.dirs$depth),]# keep only the deepest directories  
-  all.dirs$path.from.parent = gsub(prnt.source,"",all.dirs$Full)
-  all.dirs$depth.from.parent = str_count(all.dirs$path.from.parent,"/")
-  
-  
-    
-  
-  return(all.dirs)
-  
-  
-  
-} 
-
-dir.depth = get.dir.depth(prnt.source)
-
-int.depth = unique(dir.depth$depth.from.parent) # check if inconsistent depths of directories 
-#### rectify before continuing ##### 
-
-
-
+##### ~~~~ PART 1 ~~~~ #####
 
 #### ~~ Extract some metadata from recordings ~~ ##### 
 
-# Replacement for songmeter function in seewave
-
+# Better alternative to songmeter function in seewave
+# This takes much longer, but only really needs to be done once
 
 # List audio files
-all.recs = data.frame(Full = list.files(prnt.source,recursive = T,full.names = T, pattern = ".wav")) # full names of directories present
+all.recs = data.frame(Full = list.files(prnt.source,recursive = T,full.names = T, pattern = paste(as.character(file.types),collapse = "|"))) # full names of directories present
+
+
 
 ### get meta data for recordings 
 # Step 1 - extract WAMD and GUANO encoded meta data
@@ -132,9 +96,16 @@ meta_alt = plyr::mdply(all.recs$Full, #
 
 
 
-<<<<<<< HEAD
-# before moving on, you may want to see what files, didnt work 
+### STOP #### 
+
+# Files that contain warnings in the 'comments' field are typically corrupted.
+# Run through them with this next section and manually check before moving out of the 
+# recording storage location and into somewhere where they can't interfere with scripts
+
+
+# Based on above information, check potentially corrupted files and set aside
 remove = data.frame(old.name = meta_alt$filename[!is.na(meta_alt$notes)])
+
 
 # Copy and delete these files from their parent directory 
 remove$new.name = gsub("Recordings","problem_recordings",remove$old.name)
@@ -148,35 +119,7 @@ for (i in 1:nrow(remove)){
   
 }
 
-# good to go? Remove the old ones
-i=1
-for (i in 1:nrow(remove)){
-  
-  unlink(remove$old.name[i], recursive = T)
-  
-  
-  
-}
 
-
-
-=======
->>>>>>> 2993139175f9945ff72f21bb7f76354c5d195946
-
-# before moving on, you may want to see what files, didnt work 
-remove = data.frame(old.name = meta_alt$filename[!is.na(meta_alt$notes)])
-
-# Copy and delete these files from their parent directory 
-remove$new.name = gsub("Recordings","problem_recordings",remove$old.name)
-
-for (i in 1:nrow(remove)){
-  
-  if(!exists(dirname(remove$new.name[i]))){dir.create(dirname(remove$new.name[i]),recursive = T)}
-  file.copy(from = remove$old.name[i], to = remove$new.name[i],recursive = T)
-  
-  
-  
-}
 
 # good to go? Remove the old ones
 i=1
@@ -193,7 +136,7 @@ for (i in 1:nrow(remove)){
 
 
 
-
+## 
 dir.create(dirname("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Results/Tracking/BIRD/2023/MKSC/Meta_Data_Recordings.csv"),recursive = T)
 # write.csv(meta_alt,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Results/Tracking/BIRD/2023/MKSC/Meta_Data_Recordings.csv")
 
@@ -216,6 +159,29 @@ unique(meta_alt$meta_data_format)
 keep=c('filename','serial_number', 'prefix', 'original_filename', 'timestamp', 'location', 'notes', 'samplerate', 'gain', 'length', 'temperature',"meta_data_format")
 
 meta = meta_alt[keep]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

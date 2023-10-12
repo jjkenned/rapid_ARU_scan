@@ -11,7 +11,7 @@
 ## - Setting new schedule to clip with from base rec schedule
 ## - Clip recordings to new schedule from base schedule and save in new location for use
 
-
+# debugonce(View)
 
 
 # Re-set  your script when needed
@@ -28,6 +28,10 @@ library(lubridate)
 library(ggrepel)
 # detach("package:terra",unload = T)
 
+
+
+
+
 ####  working spaces
 # Set locations for source folder and destination folder 
 # you may also want to have a temporary folder 
@@ -41,11 +45,7 @@ project.dir = c("C:/Users/jeremiah.kennedy/Documents/PMRA/Code/rapid_ARU_scan") 
 meta.extract.path = file.path("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking",
                          "Full_WAMD_GUANO_EXIF.csv") # metadata extracted from recordings 
 
-sun_relative_meta.path = file.path("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking",
-                  "Start_End_Times_Relative_Suntimes_Final.csv") # sunrise and sunset relative times and metadata
-
-nightly_summary.path = file.path("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking",
-                  "NightSummary_Relative_Sun_Final.csv") # sunrise and sunset times nightly summary 
+sun_relative_meta.path = file.path("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking/2022_Nawhitti_recording_data_recs_pauses_final_True_Tz.csv") # sunrise and sunset relative times and metadata
 
 
 
@@ -55,8 +55,13 @@ nightly_summary.path = file.path("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_
 ## Read in data
 meta.extract = read.csv(meta.extract.path)
 sun_relative_meta = read.csv(sun_relative_meta.path)
-nightly_summary = read.csv(nightly_summary.path)
 
+
+
+
+
+#####################Currently not function because it was difficult to trouble shoot
+### maybe chunk function
 
 
 ## Function for creating a new (similar schedule) based on a consistent recording schedule 
@@ -64,6 +69,9 @@ nightly_summary = read.csv(nightly_summary.path)
 
 # This function requires the following values 
 meta = sun_relative_meta[sun_relative_meta$status=="recording",] # metadata including: 
+
+
+
 
 date_org = "ynight" # name of the column with the date organizer
                     # this should be Julian date (daysw from any starting point) or ordinal date (days from jan 1st of active year)
@@ -104,38 +112,45 @@ p_min_60 = 12 # 46-60min
 separator = 15 # 15 minutes
 
 
-sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_focus,min_pause,...){
+
+# testing 
+pars = list(n_max_15 = 2,
+              n_max_30 = 2,
+              n_max_45 = 3,
+              n_max_60 = 4,
+              p_min_15 = 9,
+              p_min_30 = 9, 
+              p_min_45 = 12,
+              p_min_60 = 12)
+
+
   
   # Make quick function to format dates and times quicker
-  ct7 = function(time){
+  ct8 = function(time){
     
-    strptime(time, format = "%Y-%m-%dT%H:%M:%S%z", tz = "Etc/GMT+7")
+    strptime(time, format =  "%Y-%m-%d %H:%M:%S" ,tz = "Etc/GMT+8")
     
     
   } # Converts character to time using iso8601 format in -0700 timezone
   
-  tc7 = function(time){
+  tc8 = function(time){
     
-    strftime(time, format = "%Y-%m-%dT%H:%M:%S%z", tz = "Etc/GMT+7")
+    strftime(time, format = "%Y-%m-%d %H:%M:%S", tz = "Etc/GMT+8")
     
   } # Converts time to character using iso8601 format in -0700 timezone
   
   in_out_time = function(func,time){
     
-    time = strptime(time, format = "%Y-%m-%dT%H:%M:%S%z", tz = "Etc/GMT+7")
+    time = strptime(time, format = "%Y-%m-%d %H:%M:%S", tz = "Etc/GMT+8")
     
     time_value = func(time)
     
-    out = strftime(time_value, format = "%Y-%m-%dT%H:%M:%S%z", tz = "Etc/GMT+7")
+    out = strftime(time_value, format = "%Y-%m-%d %H:%M:%S%z", tz = "Etc/GMT+8")
     
     return(out)
     
   } # Converts string to time, applies function, then converts resulting time back to character, using iso8601 format in -0700 timezone
   
-  # default dial focus is daytime
-  if(missing(dial_focus)){dial_focus = "diurnal"}
-  if(missing(min_pause)){min_pause = pause_length}
-  if(missing(separator)){separator = 15}
   
   # calculate the min length of recordings to contain given number of subrecordings 
   # given the parameters set
@@ -165,7 +180,7 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
   
   
   
-  p_f_combos = data_frame(expand_grid(p_choices = seq(p_min,p_max,60), f_choices = seq(f_min,f_max,60)))
+  p_f_combos = tibble(expand_grid(p_choices = seq(p_min,p_max,60), f_choices = seq(f_min,f_max,60)))
   
   # fill in the number of rec sessions (n)
 
@@ -178,26 +193,31 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
   p_f_combos$pminute = p_f_combos$p_choices/60
   
   # check and apply p.min and n.max values for each time frame applied
-  params = list(...) # list parameters
-  # params = tester
-  params$name = gsub(".","_",params$name)
+  # pars = list(...) # list parameters
   
-  keeping = do.call(rbind, params) # combine list
+  keeping = do.call(rbind, pars) # combine list
   
-  params = data.frame(value = keeping) # dataframe and naming value column
-   
-  params$name <- lapply(row.names(params), '[[', 1)  # move row name into it's own parameter ID column
+  pars = data.frame(value = keeping) # dataframe and naming value column
+  
+  pars$name <- lapply(row.names(pars), '[[', 1)  # move row name into it's own parameter ID column
+  
+  
+  
+  # pars = tester
+  # pars$name = gsub(".","_",pars$name)
+  
+  
   
   # create upper and lower seconds bounds for filtering
-  params$upper = as.numeric(sapply(
-    strsplit(as.character(params$name),"_")
+  pars$upper = as.numeric(sapply(
+    strsplit(as.character(pars$name),"_")
     , getElement, 3))*60
   
   
-  params$lower = params$upper-((separator)*60)+1
+  pars$lower = pars$upper-((separator)*60)+1
   
-  params$by.type = sapply(
-    strsplit(as.character(params$name),"_")
+  pars$by.type = sapply(
+    strsplit(as.character(pars$name),"_")
     , getElement, 1)
   
   
@@ -217,13 +237,13 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
     
     # check which bins the recordings fit in 
     
-    param_check = params[params$upper>=full & params$lower<=full,]
+    param_check = pars[pars$upper>=full & pars$lower<=full,]
     
     
-    if(nrow(param_check)>2){cat("too many params in",full)}
+    if(nrow(param_check)>2){cat("too many pars in",full)}
     
-    params_max_n = param_check[param_check$by.type=="n",]
-    params_min_p = param_check[param_check$by.type=="p",]
+    pars_max_n = param_check[param_check$by.type=="n",]
+    pars_min_p = param_check[param_check$by.type=="p",]
     
     #i=1
     for (i in 1:nrow(combo.by.f)){
@@ -231,9 +251,9 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
       
       
       
-      if(combo.by.f$f_choices[i]>=params_max_n$lower & 
-         combo.by.f$f_choices[i]<=params_max_n$upper &
-         combo.by.f$n_recs[i]>params_max_n$value){
+      if(combo.by.f$f_choices[i]>=pars_max_n$lower & 
+         combo.by.f$f_choices[i]<=pars_max_n$upper &
+         combo.by.f$n_recs[i]>pars_max_n$value){
         
         combo.by.f$n.keep[i] = "remove"
         
@@ -246,9 +266,9 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
         
         
         
-        if(combo.by.f$f_choices[i]>=params_min_p$lower & 
-           combo.by.f$f_choices[i]<=params_min_p$upper &
-           combo.by.f$p_choices[i]<(params_min_p$value*60)){
+        if(combo.by.f$f_choices[i]>=pars_min_p$lower & 
+           combo.by.f$f_choices[i]<=pars_min_p$upper &
+           combo.by.f$p_choices[i]<(pars_min_p$value*60)){
           
           combo.by.f$p.keep[i] = "remove"
           
@@ -290,8 +310,8 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
   
   
   
-  # ggplot(data = combo_keep,aes(x = fminute,y=n_recs,col = pminute))+
-  #   geom_point()
+   # ggplot(data = combo_keep,aes(x = fminute,y=n_recs,col = pminute))+
+   #   geom_point()
   # # 
   
   
@@ -299,12 +319,18 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
   # Now that we have a combination of values for setting standard time frames for clipping full audio
   # into new, smaller files, compare these to the main values
   
+  sink("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking/20230920_Renaming_Tracking.txt")
+  
+
+
+  
+  
   
   # Dataframe meta
-  i=2
+  #i=2
   
-  station=unique(meta$station)[1]
-  night = unique(meta_stn$ynight)[1]
+  #station=unique(meta$station)[1]
+  #night = unique(meta_stn$ynight)[1]
   
   for (station in unique(meta$station)){
     
@@ -314,7 +340,35 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
       
       
       meta_date = meta_stn[meta_stn$ynight==night,]
-      meta_date = meta_date[order(ct7(meta_date$start_time),decreasing = F),] # sort by start time just incase
+      meta_date = meta_date[order(ct8(meta_date$start_time),decreasing = F),] # sort by start time just incase
+      
+      
+      
+      ###### insert
+      
+      
+      suntimes = meta_date %>% 
+        mutate_at(vars(start_time, sunrisetime), ~ as.POSIXct(.x,tz = "Etc/GMT+8")) %>% # sunrise time
+        mutate(start_time_to_sunrise =  as.numeric(seconds(sunrisetime) - seconds(start_time))) %>%
+        
+        mutate_at(vars(start_time, sunsettime), ~ as.POSIXct(.x,tz = "Etc/GMT+8")) %>% # sunset time
+        mutate(start_time_since_sunset = as.numeric(seconds(start_time) - seconds(sunsettime))) %>% 
+        
+        # repeat for the end of the recordings 
+        mutate_at(vars(end_time, sunrisetime), ~as.POSIXct(.x,tz = "Etc/GMT+8")) %>% # sunrise time
+        mutate(end_time_to_sunrise =  as.numeric(seconds(sunrisetime) - seconds(end_time))) %>%
+        
+        mutate_at(vars(end_time, sunsettime), ~as.POSIXct(.x,tz = "Etc/GMT+8")) %>% # sunset time
+        mutate(end_time_since_sunset = as.numeric(seconds(end_time) - seconds(sunsettime)))
+      
+      
+      ###############
+      
+      meta_date$start_time_to_sunrise = suntimes$start_time_to_sunrise
+      meta_date$start_time_since_sunset = suntimes$start_time_since_sunset
+      meta_date$end_time_to_sunrise = suntimes$end_time_to_sunrise
+      meta_date$end_time_since_sunset = suntimes$end_time_since_sunset
+      
       
       
       # let's start with a tracking file and an output file
@@ -328,12 +382,15 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
         # subset data
         old_rec = meta_date[i,]
         
-        #### Section 1 ~~ Trim to pre-set sunrise/sunset based start and end times ####
         
+        
+        #### Section 1 ~~ Trim to pre-set sunrise/sunset based start and end times ####
         start_since_sunset = old_rec$start_time_since_sunset
         start_to_sunrise = old_rec$start_time_to_sunrise
         end_since_sunset = old_rec$end_time_since_sunset
         end_to_sunrise = old_rec$end_time_to_sunrise
+        
+        
         
         
         # track what you do 
@@ -342,6 +399,11 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
         old_rec$end_time_offset = NA
         old_rec$prior_rec_offset = NA
         old_rec$full_rec_start_time = old_rec$start_time
+        
+        
+        
+        
+    
         
         # Dont include if they both start and end before start time
         if(start_since_sunset<start_time & end_since_sunset<start_time){
@@ -408,9 +470,9 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
           
           last_rec = rec_time+rec_length
           
-          if(ct7(old_rec$start_time)<last_rec+min_pause & !track_out[[i-1]]$kept == "removed"){
+          if(ct8(old_rec$start_time[1])<last_rec+min_pause & !track_out[[i-1]]$kept == "removed"){
             
-            offset = as.numeric(difftime((last_rec+min_pause),ct7(old_rec$start_time),units = "secs"))
+            offset = as.numeric(difftime((last_rec+min_pause),ct8(old_rec$start_time),units = "secs"))
             
             old_rec$start_time = in_out_time(func = function(x) offset+x,time = old_rec$start_time)
             
@@ -451,19 +513,21 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
         while(n<=sub_pattern$n_recs){
           
           # make a new name and corresponding offset and ending offset from beginning of recording
-          rec_time = ct7(old_rec$start_time)
+          rec_time = ct8(old_rec$start_time)
           
           offset = n*sub_pattern$p_choices
           
           newstart = rec_time+offset
           
-          newtime = strftime(newstart, format = "%Y%m%d_%H%M%S%z", tz = "Etc/GMT+7")
+          newtime = strftime(newstart, format = "%Y%m%d_%H%M%S%z", tz = "Etc/GMT+8")
           
           
           
           newname = paste0(old_rec$station,"_",newtime,".wav")
           
           sub_keeper = old_rec
+          
+          sub_keeper$new_start_time = strftime(newstart, format = "%Y-%m-%d %H:%M:%S%z",tz = "Etc/GMT+8")
           
           sub_keeper$new_name = newname
           
@@ -527,14 +591,9 @@ sub_schedule = function(meta,start_time,end_time,rec_length,pause_length,dial_fo
     
   }
   
-  
-  
-  return(track_stn,new_name_stn)
-  
-  
-  
-}  
-  
+  sink()
+
+
   
 
 # a second function for organizing the output
@@ -544,9 +603,23 @@ meta_2_convert = meta_2_convert[c("filename","new_name","station","ynight","star
 meta_2_convert$true_start_offset = rowSums(meta_2_convert[,c("start_time_offset","prior_rec_offset","clip_offset")],na.rm = T)
 
 
+# check if you have issues with new name
+check = data.frame(table(meta_2_convert$new_name))
 
 
-###
+# create full new name
+
+meta_2_convert$full.new.name = gsub(basename(meta_2_convert$filename),meta_2_convert$new_name,meta_2_convert$filename)
+
+#write.csv(track_stn, "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking/Tracking_Station_rec_name_Changes.csv")
+#write.csv(track_stn, "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking/All_rec_name_Changes.csv")
+
+### Use these values to clip
+
+# Needed
+# input file | output file | 'trim' | start | duration
+
+
 
 
   
@@ -563,50 +636,6 @@ meta_2_convert$true_start_offset = rowSums(meta_2_convert[,c("start_time_offset"
   
   
   
-  
-  for (i in 1:nrow(meta)){
-    
-    old_rec = meta[i,]
-    
-    # FInd recording length value in list of chunking choices
-    sub_pattern = combo_keep[combo_keep$f_choices == floor(old_rec$length/60)*60,]
-    
-    if(!nrow(sub_pattern)==1){cat("too many choices for",old_rec)}
-    
-    # start while loop through number of recs 
-    n=0
-    while(n<=sub_pattern$n_recs){
-      
-      # make a new name and corresponding offset and ending offset from beginning of recording
-      rec_time = ct7(old_rec$start_time)
-      
-      offset = n*sub_pattern$p_choices
-      
-      newstart = rec_time+offset
-      
-      newtime = strftime(newstart, format = "%Y%m%d_%H%M%S%z", tz = "Etc/GMT+7")
-      
-      
-      
-      newname = paste0(old_rec$station,"_",newtime,".wav")
-      
-      sub_keeper = data.frame(old.full = old_rec$filename,new.name = newname,offset = offset)
-      
-      
-      
-      
-      #### filter by sunrise and sunset
-      # and figure out how to save these output values from a while loop 
-      
-      
-      
-      
-      
-      
-    }
-    
-    
-  }
   
   
   
@@ -647,7 +676,7 @@ meta_2_convert$true_start_offset = rowSums(meta_2_convert[,c("start_time_offset"
       meta_date = meta_stn[meta_stn$ydate==date,]
       
       # Order by time (just in case)
-      meta_date = meta_date[order(ct7(meta_date$start_time),decreasing = F),]
+      meta_date = meta_date[order(ct8(meta_date$start_time),decreasing = F),]
       
       # get start and end
       night_start = in_out_time(min,meta_date$start_time)

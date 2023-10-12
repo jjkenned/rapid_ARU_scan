@@ -4,11 +4,7 @@
 
 ## Script Sections
 
-# 1) Get folder structure and depth 
-# 2) Folder and file naming conventions
-# 3) Insert and check names if needed
-# 4) Choose list of files to copy and rename 
-# 5) Copy and rename
+# Rename files if needed
 
 
 
@@ -20,27 +16,35 @@ rm(list=ls())
 # libraries
 library(stringr)
 library(tidyverse)
-library(av)
 
 # set file path to location of recording files
 
-par.dir = "D:/2022.WESO.NorthIsland.ARU Audio"
+par.dir = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023/MKSC/MKSC-03/MKSC-03-S04"
 
 
 ##### 1) Get Folder Structure & Depth ###### 
 
 ## list files ##
-files = list.files(par.dir,full.names = T,recursive = T)
-non_rec = data.frame(full.name = files[str_ends(files$full,".wav",negate = T),]) # check non-wav files 
-### (CONVERT .wac, .w4v, .flac etc IF PRESENT) ###
+files = data.frame(full = list.files(par.dir,full.names = T,recursive = T,pattern = ".wav"))
 
-recs = data.frame(full.name = files[str_ends(files$full,".wav"),]) # check wav files
+# new name
+files$new.name = gsub("-003-A04_","-03-S04_",files$full)
+files$new.name = gsub("*_0\\+1_*","_",files$new.name)
 
-# now get the recording length 
-recs$duration = av_media_info(recs$full.name)$duration
+
+
+for(i in 1:nrow(files)){
+  
+  file.rename(from = files$full[i], files$new.name[i])
+  
+  
+}
+
+
+
 
 # Now let's deal with name issues
-
+?file.rename
 
 
 
