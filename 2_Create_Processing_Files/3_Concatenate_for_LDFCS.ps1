@@ -4,17 +4,28 @@
 
 
 
-# Set-Location -Path "D:\PMRA_SAR\Processing\Timelapse_files\LDFCS\BIRD\2022\MKDI\"
+
 
 # $group = "MKSC-01" # station to station basis at this point
 
 # set in and out directories 
-$parent_input_dir = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\2023_WLRS_Contract\processing\new_name_indices" 
+$base_dir = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\Processing"
+$transect = "MKSC-01"
+$region = $transect.Substring(0,4)
+$year = "2023"
+$species = "BIRD"
+$from = "new_name_indices"
+$to = "by_night"
+
+
+
+$parent_input_dir = "$base_dir\$species\$year\$region\$from\$transect"
 $input_directories = Get-Childitem -Path "$parent_input_dir"
-$output_directory = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\2023_WLRS_Contract\processing\by_night" # output directory 
+$output_directory = "$base_dir\$species\$year\$region\$to\$transect" # output directory 
 $name_filter = "*" # name filter(kinda unsure what it means)
 $time_zone_offset = -0700
 
+Set-Location -Path $base_dir
 
 
 # Do not continue running the script if a problem is encountered
@@ -28,7 +39,11 @@ $default_configs = Resolve-Path "$ap_path\ConfigFiles"
 
 
 # check how it works
-# $input_directory = $input_directories[1]
+
+$intput_directory = Get-ChildItem -Path $parent_input_dir  |
+         Sort-Object CreationTime |
+         Select-Object -Skip 2 |
+         Select-Object -First 1
 
 foreach ($input_directory in $input_directories) {
 
@@ -44,7 +59,7 @@ foreach ($input_directory in $input_directories) {
     # https://ap.qut.ecoacoustics.info/technical/commands/concatenate_index_files.html
     C:\AP\AnalysisPrograms.exe ConcatenateIndexFiles `
         --input-data-directory "$parent_input_dir\$current_group" `
-        --output-directory "$output_directory\$current_group" `
+        --output-directory "$output_directory" `
         -z $time_zone_offset `
         --file-stem-name $current_group `
         --directory-filter "*.*" `
