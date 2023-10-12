@@ -15,42 +15,6 @@
 dev.off()
 rm(list=ls())
 
-<<<<<<< HEAD
-# Base folder with recordings present 
-recs.loc = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/recordings/2022_Nawhitti")
-
-#### First trial of this component of script ######
-# List files in location
-files = data.frame(Full_name = list.files(path = recs.loc,all.files = T,full.names = T,recursive = T, pattern = ".wav"))
-
-# Get Meta data 
-meta = songmeter(basename(files$Full_name)) 
-meta$recording = basename(files$Full_name) # append recording name
-meta$full_name = files$Full_name # append full file path
-
-
-# Get ordinal date
-orday = yday(as.Date(paste0(file.grps$year[i],"-",file.grps$month[i],"-",file.grps$day[i])))
-
-
-
-# Summarize by nights, volume of data and locations
-file.grps = meta %>% group_by(prefix,year,month,day) %>% mutate(group_id = cur_group_id()) # group by date
-# quick function for translating day number into night number 
-# day = night ID, hr = hour in 24 hr clock (as integer), split = when to cut off the nights from one another (usually 12...noon)
-d2n.func = function(day,hr,split){
-  
-  if (hr<split){night = day} else (night = day+1)
-  
-  return(night)
-  
-}
-
-
-
-
-
-=======
 # set Timezone
 Sys.setenv(TZ = "Etc/GMT+8") # "https://www.ibm.com/docs/en/cloudpakw3700/2.3.0.0?topic=SS6PD2_2.3.0/doc/psapsys_restapi/time_zone_list.htm"
 Sys.timezone() # check
@@ -66,9 +30,10 @@ library(exifr)
 library(suncalc)
 library(terra)
 library(geosphere)
+library(plyr)
 
 # set some directories
-prnt.source = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023/MKSC") # Base folder with recordings present 
+prnt.source = c("F:/PMRA_SAR/Recordings/BIRD/2023/MKVI") # Base folder with recordings present 
 project.dir = c("C:/Users/jeremiah.kennedy/Documents/PMRA/Code/rapid_ARU_scan") # directory for your R project 
 jpg.dir = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/final_schedule_vis") # where the nightly recording schedule visualizations are to be kept 
 GPS.Locs = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/recording_tracking/ARU_Locations.csv" # aru locations
@@ -147,6 +112,35 @@ all.recs = data.frame(Full = list.files(prnt.source,recursive = T,full.names = T
 meta_alt = plyr::mdply(all.recs$Full, # 
                        Get_wamd_guan,
                        .progress=plyr::progress_text(style = 3))
+
+
+
+# before moving on, you may want to see what files, didnt work 
+remove = data.frame(old.name = meta_alt$filename[!is.na(meta_alt$notes)])
+
+# Copy and delete these files from their parent directory 
+remove$new.name = gsub("Recordings","problem_recordings",remove$old.name)
+
+for (i in 1:nrow(remove)){
+  
+  if(!exists(dirname(remove$new.name[i]))){dir.create(dirname(remove$new.name[i]),recursive = T)}
+  file.copy(from = remove$old.name[i], to = remove$new.name[i],recursive = T)
+  
+  
+  
+}
+
+# good to go? Remove the old ones
+i=1
+for (i in 1:nrow(remove)){
+  
+  unlink(remove$old.name[i], recursive = T)
+  
+  
+  
+}
+
+
 
 
 # before moving on, you may want to see what files, didnt work 

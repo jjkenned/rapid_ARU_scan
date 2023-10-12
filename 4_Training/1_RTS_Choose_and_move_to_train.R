@@ -27,7 +27,7 @@ prt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR" # parent direct
 
 out.dirs = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Training/Transferring_Files/Jamie","S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Training/Transferring_Files/Kelsey")
 
-db.paths = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/CoastOwlsBC.ddb")
+db.paths = c("D:/PMRA_SAR/processing/Timelapse_files/RTS/BIRD/2022/TimelapseData_merged.ddb")
 
 # db.path = "D:/PMRA_SAR/processing/Timelapse_files/RTS/BIRD/2022/TimelapseData_merged.ddb"
 # db.path.2 ="S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/RTS/BIRD/2022/CoastOwlsBC.ddb"
@@ -140,6 +140,7 @@ get_specs = function(db.paths,table.name,chosen){
   
 }
 
+
 # Apply function
 dat.tbl = get_specs(db.paths,"DataTable",chosen)
 
@@ -151,7 +152,7 @@ for (i in 1:nrow(move)){
   
   if(!exists(dirname(move$new_path[i]))){
     
-    dir.create(dirname(move$new_path[i]))
+    dir.create(dirname(move$new_path[i]),recursive = T)
     
   }
   

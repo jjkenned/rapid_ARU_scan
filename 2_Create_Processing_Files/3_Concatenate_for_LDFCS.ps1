@@ -9,9 +9,9 @@
 # $group = "MKSC-01" # station to station basis at this point
 
 # set in and out directories 
-$parent_input_dir = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\2023_WLRS_Contract\processing\new_name_indices" 
+$parent_input_dir = "F:\PMRA_SAR\Processing\indices\BIRD\2023\MKVI\MKVI-22\new_name_indices" 
 $input_directories = Get-Childitem -Path "$parent_input_dir"
-$output_directory = "S:\ProjectScratch\398-173.07\PMRA_WESOke\PMRA_SAR\2023_WLRS_Contract\processing\by_night" # output directory 
+$output_directory = "F:\PMRA_SAR\Processing\indices\BIRD\2023\MKVI\MKVI-22\by_night" # output directory 
 $name_filter = "*" # name filter(kinda unsure what it means)
 $time_zone_offset = -0700
 

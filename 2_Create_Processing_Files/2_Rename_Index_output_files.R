@@ -27,12 +27,13 @@ library(seewave)
 library(lubridate)
 library(rjson)
 library(jsonlite)
-library(SciencesPo)
+#library(SciencesPo)
+detach("package:plyr",unload = T)
 
 # set file path to location of indices files
-ind.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/by_rec"
-rec.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/recordings/2022_Nawhitti"
-results.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/by_rec/new_name_indices"
+ind.root = "F:/PMRA_SAR/Processing/indices/BIRD/2023/MKVI/MKVI-24/by_rec"
+rec.root = "F:/PMRA_SAR/Recordings/BIRD/2023/MKVI/MKVI-24"
+results.root = "F:/PMRA_SAR/Processing/indices/BIRD/2023/MKVI/MKVI-24/new_name_indices"
 
 
 # Get file paths and info 
@@ -155,7 +156,7 @@ start.sec = 0
 
 
 # night = unique(file.grps$night.ID)[1]
-for (night in unique(file.grps[file.grps$night.ID>224,]$night.ID)){
+for (night in unique(file.grps$night.ID)){
   
   
   # night filter
@@ -209,7 +210,7 @@ dat_out$new_name_final = paste0(dat_out$station,"_",dat_out$year,
                                 formatC(dat_out$sec,width=2,flag=0),"-0700.wav")
 
 
-###
+ ###
 # Save this massive list 
 dir.create(results.root,recursive = T)
 write.table(dat_out,file = paste0(results.root,"/Old_New_NameConverstions.txt"),sep = "/t",col.names = T,row.names = F)
@@ -268,13 +269,13 @@ mapply(change.index.output.names,
        old.basename = dat_out$basename)
 
 # subset
-
-dat_ret = dat_out[5201:nrow(dat_out),]
-
-mapply(change.index.output.names,
-       indices.enclosing.folder = dat_ret$ind.path,
-       new.basename = dat_ret$new_name_final,
-       old.basename = dat_ret$basename)
+# 
+# dat_ret = dat_out[5201:nrow(dat_out),]
+# 
+# mapply(change.index.output.names,
+#        indices.enclosing.folder = dat_ret$ind.path,
+#        new.basename = dat_ret$new_name_final,
+#        old.basename = dat_ret$basename)
 # 
 # 
 # # make some changes to the json files
