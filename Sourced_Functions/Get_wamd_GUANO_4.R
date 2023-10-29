@@ -26,7 +26,7 @@ Get_wamd_guan=function(filename) {
   
   # a key for searching the above data in the wamd encoded files
   WAMD_key = c('filename','version', 'make', 'model', 'serial', 'firmware', 'software',
-          'prefix', 'original_filename', 'timestamp', 'GPS Location','GPS1','GPS2','GPSTrack', 
+          'prefix', 'original_filename', 'timestamp', 'location','GPS1','GPS2','GPSTrack', 
           'license','notes', 'auto_id', 'manual_id', 'voicenotes',
           'auto_id_stats', 'time_expansion','program', 'runstate',
           'mics', 'sensitivity', 'samplerate', 'gain', 'length', 'temperature',"meta_data_format")
