@@ -1,17 +1,8 @@
-##########################################################
-########### Scratch Script and Workspace# ################
-##########################################################
+### Function for converting day-month-year formatted time to ordinal date
+# based on Noon split and Jan 1st midnight - noon is night 1; 
+# days since 'start_year' (jan 1st, 2000 is standard) 
+# this requires lubridate for yday function
 
-
-
-
-
-## Brainstorm for Training validation and comparisons
-
-time = full.meta$start_time[1]
-start_time = "2000-01-01 00:00:00"
-tzone = full.meta[1,"tzone"]
-tzone_R = full.meta[1,"tzone_R"]
 
 
 or.seconds = function(time,start_time,tzone,tzone_R){
@@ -34,10 +25,4 @@ or.seconds = function(time,start_time,tzone,tzone_R){
   
   
 }
-
-
-
-
-
-
 

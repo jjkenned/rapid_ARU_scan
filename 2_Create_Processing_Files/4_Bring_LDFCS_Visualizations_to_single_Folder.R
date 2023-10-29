@@ -22,13 +22,13 @@ library(tidyverse)
 # pre-set transect/group
 # group = "MKDI-01"
 
-dir_sep_base = "D:/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2022/MKDI/by_night" # where the files are kept
-dir_return_base = "D:/PMRA_SAR/Processing/Timelapse_Files/LDFCS/BIRD/2022/MKDI/Full_LDFCS" # where the combined files are to go
+# dir_sep_base = "D:/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2022/MKDI/by_night" # where the files are kept
+# dir_return_base = "D:/PMRA_SAR/Processing/Timelapse_Files/LDFCS/BIRD/2022/MKDI/Full_LDFCS" # where the combined files are to go
 
 # group = "MKSC-U01-006"
 
-dir_sep = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD/2023/MKSC/by_night" # where the files are kept
-dir_return = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2023/MKSC" # where the combined files are to go
+dir_sep = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD/2023/MKSC/by_night/MKSC-02" # where the files are kept
+dir_return = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2023/MKSC/MKSC-02" # where the combined files are to go
 
 
 

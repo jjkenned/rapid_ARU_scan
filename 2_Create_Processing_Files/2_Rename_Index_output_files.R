@@ -52,7 +52,7 @@ colnames(paths) = "ind.path"
 
 
 # file path for corresponding ARU recordings
-recs = fs::dir_info(path = rec.root,recurse = T) %>% # two depth 
+recs = fs::dir_info(path = rec.root,recurse = T) %>% 
   as_tibble() %>% # set block allocation to 0
   filter(type=="file") %>% # keep files and not folders
   select(c("path")) %>%
@@ -78,7 +78,7 @@ paths$rec.name = gsub(".wav","",paths$basename) # get rid of wav name
 
 # contingencies for SM3s
 # make a baseline rec name that removes sm3 issues
-paths$base.rec = gsub("*_0\\+1_*","_",paths$rec.name)
+paths$base.rec = gsub("_0\\+1_","_",paths$rec.name)
 
 meta = separate(paths,base.rec,into = c("station","date","time"),sep = "_") # get recording time, date and location data
 meta$transect = substr(meta$station,1,7)
@@ -242,8 +242,8 @@ write.table(dat_out,file = paste0(results.root,"/Old_New_NameConverstions.txt"),
 
 ## for testing
 # indices.enclosing.folder = dat_out$ind.path[1]
-# new.basename = dat_out$new_name_final[1]
-# old.basename = dat_out$basename[1]
+# new.basename = dat_out$name.ldfcs[1]
+# old.basename = dat_out$base.name[1]
 
 
 # Function
@@ -280,7 +280,8 @@ change.index.output.names = function(indices.enclosing.folder,new.basename,old.b
   
   write(json.new,json.path)
   
-  print(old.basename)
+  
+  
   
 }
 
