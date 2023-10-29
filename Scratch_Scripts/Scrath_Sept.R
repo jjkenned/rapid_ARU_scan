@@ -8,141 +8,29 @@
 
 ## Brainstorm for Training validation and comparisons
 
-## step 1 
+time = full.meta$start_time[1]
+start_time = "2000-01-01 00:00:00"
+tzone = full.meta[1,"tzone"]
+tzone_R = full.meta[1,"tzone_R"]
 
-# get full file names for databases containing all file processing results
-# 
 
-
-read.results = function(paths){
+or.seconds = function(time,start_time,tzone,tzone_R){
+  
+  # get lubridate
+  require(lubridate)
+  
+  # add timezone into time
+  start_time = paste0(start_time,tzone)
+  
+  # convert time into time format
+  start_time = as.POSIXct(start_time,format = "%Y-%m-%d %H:%M:%S%z",tz = tzone_R)
+  time = as.POSIXct(time,format = "%Y-%m-%d %H:%M:%S%z",tz = tzone_R)
+  
+  # days since that start date
+  or_secs = as.numeric(difftime(time, start_time,units = "secs"))
   
   
-  
-  
-}
-
-
-
-
-
-# 1) parent directory of training (output storing)
-prt.dest = file.path("S:/Projects/107182-01/07a Working Folder/Protocols/ARU/Rapid SCan/Rapid_Scanning_Training/R_Output")
-
-
-file.long = data.table::melt(data.table(file),id.vars = c("File","Obs.ID"),measure.vars = c(comps.cols))
-
-
-
-
-# site = unique(meta_2$prefix)[1]
-for (site in unique(meta_2$prefix)){
-  
-  # What site we working with 
-  print(paste0("started site ~ ",site))
-  
-  
-  # Keep only appropriate site data
-  dat_in = meta_2[meta_2$prefix==site,]
-  
-  all_nights = unique(dat_in$or.night)
-  
-  # Loop through recording nights 
-  # j = 1
-  for (j in 1:length(all_nights)){
-    
-    grp_night = all_nights[j]
-    
-    
-    dat_ret = dat_in[dat_in$or.night %in% grp_night,]
-    
-    print("ordinal dates")
-    print(unique(dat_ret$or.day))
-    
-    
-    # Create directory for site specs
-    dir.out = paste0(OutputFolder,"/",site,"/",grp_night,"/")
-    if(!dir.exists(dir.out)){
-      dir.create(dir.out,recursive = T)
-    } 
-    
-    # through sessions within night
-    # i=1
-    for (i in 1:nrow(dat_ret)){
-      
-      # all info for recording
-      dat_use = dat_ret[i,]
-      
-      # the following can be set specifically in the loops if need be (see other write spectrograms scrpt)
-      Length=dat_use$duration # total length of recording in seconds
-      Breaks=seq(0,Length,Interval) # sequence of break locations 
-      
-      ptm = proc.time()
-      
-      # loop through 30 sec periods
-      # k=1
-      for (k in 1:(length(Breaks)-1)){
-        
-        ### processing time
-        
-        ### 
-        
-        # set start and end of segment within recordings
-        Start = Breaks[k]
-        End = Breaks[k+1]
-        
-        
-        # create name for each time image
-        
-        name=paste0(gsub(pattern = "*.wav",replacement = "",x = basename(dat_use$file.name)),"_",formatC(Start, width = 3,flag = 0))
-        
-        name=paste(name,"png",sep = ".")
-        
-        name=gsub(pattern = "_0\\+1_",replacement = "_", name) # final name
-        full.name = paste0(dir.out,name) # full name
-        
-        
-        
-        # 
-        recording = gsub(" ","\ ",dat_use$file.name) # Identify file name required here
-        
-        
-        # create sox command line
-        args_command = paste0(recording,
-                              " -n remix 1 rate 16k trim ", Start," ", Interval, " spectrogram -r -z 90 -x 1500 -y 1200 -o ", # -o always goes at the end
-                              full.name)
-        
-        
-        
-        system2("sox",
-                args = args_command)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-      }
-      
-      print(proc.time() - ptm)
-      
-    }
-    
-    
-    
-    
-    # Track sessions
-    # 
-    print(paste0("Session ",i," of ", max(dat_in$night.seq)," site ",site))    
-  }
-  
-  
-  
+  return(or_secs)
   
   
 }
@@ -153,6 +41,7 @@ for (site in unique(meta_2$prefix)){
 
 
 
+<<<<<<< HEAD
 ct8 = function(time){
   
   
@@ -219,3 +108,5 @@ configs = audiomoth_config("E:/PMRA_SAR/Recordings/BIRD/2022/MKBI/MKBI-01/MKBI-0
 
 
 
+=======
+>>>>>>> 9ed1069610e7a439fbaee17ca97654ac8202904f
