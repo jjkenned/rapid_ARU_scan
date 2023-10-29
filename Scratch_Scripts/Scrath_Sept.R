@@ -193,15 +193,16 @@ old_rec$prior_rec_offset = NA
 
 
 
+# check differences between directories
+install.packages("sonicscrewdriver")
+library(sonicscrewdriver)
+
+"E:/PMRA_SAR/Recordings/BIRD/2022/MKBI/MKBI-01/MKBI-01-S04/CONFIG.TXT"
+
+summaryfile = read.delim("E:/PMRA_SAR/Recordings/BIRD/2022/MKBI/MKBI-01/MKBI-01-S04/CONFIG.TXT")
 
 
-
-
-
-
-
-
-
+configs = audiomoth_config("E:/PMRA_SAR/Recordings/BIRD/2022/MKBI/MKBI-01/MKBI-01-S04/CONFIG.TXT")
 
 
 

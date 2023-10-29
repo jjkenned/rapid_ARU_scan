@@ -34,7 +34,7 @@ Sys.timezone() # check
 
 ## Packages ##
 # ~ Install if you don't already have them installed
-# ~ install.packages(c("RSQLite","exifr","suncalc","tidyverse","lubridate"))
+# ~ install.packages(c("RSQLite","exifr","suncalc","tidyverse","lubridate","sonicscrewdriver"))
 
 
 # library what is needed
@@ -53,8 +53,9 @@ library(RSQLite)
 
 ## set directories ##
 
-# Recording and input directories
-prnt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023/MKSC" # Base folder with recordings present 
+# Recording and input directories (Parent SOurce)
+
+prnt.source = "F:/PMRA_SAR/Recordings/BIRD/2023" # Base folder with recordings present 
 
 # MetaData and output directories
 base.meta.dir = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData" 
@@ -130,6 +131,33 @@ for (i in 1:nrow(remove)){
   
   
 }
+
+
+
+
+# another quick function to pull the rest of the meta data
+# Because Guano and WAMD encoded files contain different information, you may want or need this to supply missing info 
+# for Guano files, include the following for filling in missing metadata
+exif_keep = c("SourceFile","NumChannels","BitsPerSample","FileSize","SampleRate")
+
+## IF you have a lot of files, this may take some time. Be aware of this 
+# apply across dataset
+meta_exif = plyr::mdply(all.recs$Full, 
+                        
+                        .fun = function(x) {exifr::read_exif(x, tags = exif_keep)},
+                        
+                        .progress=plyr::progress_text(style = 3))[exif_keep]
+
+
+##  Combine metadata 
+# now that all metadata is extracted from this dataset you can find everything you need in the future for these recordings 
+# Make sure you keep what you could need down the road 
+colnames(meta_exif)[colnames(meta_exif)=="SourceFile"]="filename"
+
+meta_full = merge(meta_exif,meta, by = "filename")
+
+
+
 
 
 
