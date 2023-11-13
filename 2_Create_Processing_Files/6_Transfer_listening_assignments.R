@@ -7,7 +7,9 @@ dev.off()
 rm(list=ls())
 
 ## path 
-imgs = list.files("D:/",recursive = T,pattern = "jpg",full.names = T)
+files = list.files("D:/PMRA_SAR/processing/Timelapse_files/RTS", recursive = T, full.names = T)
+
+imgs = list.files("D:/PMRA_SAR/processing/Timelapse_files/RTS",recursive = T,pattern = "jpg",full.names = T)
 imgs = as.data.frame(imgs)
 imgs$audio = substr(basename(imgs$imgs),1,27)
 imgs$wav = paste0(imgs$audio,".wav")
@@ -21,6 +23,7 @@ recs_move$dest = gsub("E:/","D:/",recs_move$orig)
 
 
 # Copy one at a time for tracking purposes
+
 for (i in 1:nrow(recs_move)){
   
   if(!dir.exists(dirname(recs_move$dest[i]))){dir.create(dirname(recs_move$dest[i]),recursive = T)}
@@ -30,6 +33,10 @@ for (i in 1:nrow(recs_move)){
 }
 
 # now let's go back and do the whole thing with the jpgs too
+
+
+
+
 
 
 all_imgs = list.files("E:/PMRA_SAR/processing/Timelapse_files/RTS/BIRD/2022/MKVI", recursive = T, pattern = ".wav",full.names = T)

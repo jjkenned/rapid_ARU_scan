@@ -20,6 +20,10 @@ rm(list=ls())
 
 # set your timezone 
 Sys.setenv(TZ = "Etc/GMT+8") # "https://www.ibm.com/docs/en/cloudpakw3700/2.3.0.0?topic=SS6PD2_2.3.0/doc/psapsys_restapi/time_zone_list.htm"
+Sys.timezone() # check
+options(stringsAsFactors = FALSE)
+time_format = "%Y-%m-%d %H:%M:%S%z"
+
 
 # library what is needed
 library(stringr)

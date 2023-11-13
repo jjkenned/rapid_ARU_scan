@@ -47,14 +47,14 @@ start from the "#set input and output directories" section and set manually
 #>
 
 # Set station or station list you want to use
-$transect = "MKSC-02" # station to station basis at this point
+$transect = "MKVI-04" # station to station basis at this point
 $year = "2023"
 $region = $transect.Substring(0,4)
 
 
 # Setup parent directories
-$base_parent_in = "S:\ProjectScratch\398-173.07\PMRA_WESOke"
-$base_parent_out = "S:\ProjectScratch\398-173.07\PMRA_WESOke" # set manually if different
+$base_parent_in = "F:"
+$base_parent_out = "F:" # set manually if different
 
 
 

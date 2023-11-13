@@ -106,20 +106,16 @@ for (i in 1:length(db.paths)){
 table(dat.out$Training)
 table(dat.out$Process)
 table(dat.out$trainee.path) # got all data you want?
-table(dat.out$Comments)
+table(dat.out$Notes)
 
 # list comments you want to explore
-comments = c("clipped short, no ratings","incomplete LDFCS; no ratings","na","Not processed","Not reviewed")
-
-check = dat.out[dat.out$Comments %in% comments,]
-check = check[c("File","Comments")]
-
+comments = unique(dat.out[!dat.out$Notes == "",c("File","Notes")])
 # now remove frames that are not present for both
 # Im filtering by check because I dont want any of them
 
-remove = check$File
+# remove = check$File
 
-dat.out = dat.out[!dat.out$File %in% remove,]
+# dat.out = dat.out[!dat.out$File %in% remove,]
 
 # make sure the same is present for each
 # there should be exactly 2 per image
@@ -129,6 +125,8 @@ compare = dat.out %>% group_by(File) %>% summarise(count = n())
 # if list gets longer then two you will want to expand into loop or function 
 table(dat.out$trainee.path)
 dat.out$Obs.ID = NA
+
+
 
 dat.out$Obs.ID[dat.out$trainee.path == "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/Training/CC/
                Timelapse_files/LDFCS/BIRD/2022/MKSC/IndicesProcessing4.ddb"] = daughters[1]

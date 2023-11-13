@@ -31,10 +31,23 @@ library(jsonlite)
 library(warbleR)
 #library(SciencesPo)
 
-# set file path to location of indices files
-ind.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD/2023/MKSC/by_rec/MKSC-01"
-rec.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023/MKSC/MKSC-01"
-results.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Name_Change_Tracking/BIRD/2023/MKSC/MKSC-01/new_name_indices"
+# set file path to location of indices files and database
+# set transect ID
+transect = "MKVI-04"
+region = substr(transect,1,4)
+year = "2023"
+
+ind.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD"
+rec.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD"
+results.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Name_Change_Tracking/BIRD"
+
+ind.path = file.path(ind.root,year,region,"by_rec",transect)
+rec.path = file.path(rec.root,year,region,transect)
+results.path = file.path(results.root,year,region,transect,"new_name_indices")
+
+## database setup
+db.path = "S:/Projects/107182-01/06 Data/ARU processing/meta_data"
+db.name = "20231022_Meta_Database.sqlite"
 
 # get rid of problem files before running script
 
@@ -44,7 +57,7 @@ results.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Nam
 
 # Get file paths and info 
 # File paths for indices folders
-paths = fs::dir_info(path = ind.root,recurse = 2) %>% # two depth 
+paths = fs::dir_info(path = ind.path,recurse = 2) %>% # two depth 
   as_tibble() %>% 
   filter(blocks==0) %>% # set block allocation to 0
   select(c("path")) # keep only path 
@@ -52,7 +65,7 @@ colnames(paths) = "ind.path"
 
 
 # file path for corresponding ARU recordings
-recs = fs::dir_info(path = rec.root,recurse = T) %>% 
+recs = fs::dir_info(path = rec.path,recurse = T) %>% 
   as_tibble() %>% # set block allocation to 0
   filter(type=="file") %>% # keep files and not folders
   select(c("path")) %>%
@@ -82,6 +95,24 @@ paths$base.rec = gsub("_0\\+1_","_",paths$rec.name)
 
 meta = separate(paths,base.rec,into = c("station","date","time"),sep = "_") # get recording time, date and location data
 meta$transect = substr(meta$station,1,7)
+
+
+
+############################
+##### ~~~~ PART 2 ~~~~ #####
+##### Read from Database ######
+############################
+
+# set location for Database
+meta.db = dbConnect(RSQLite::SQLite(),file.path(db.path,db.name))
+
+# check status ~ if new, will get no info
+dbListTables(conn = meta.db)
+meta = as.data.frame(meta)
+
+
+
+
 
 ###### Dates are frustrating ###### 
 

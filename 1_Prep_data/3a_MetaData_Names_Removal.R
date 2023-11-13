@@ -27,7 +27,6 @@
 
 
 
-
 ## Resets ## 
 # Reset your script when needed
 dev.off()
@@ -53,8 +52,8 @@ library(lubridate)
 library(ggrepel)
 library(exifr)
 library(suncalc)
-library(terra)
-library(geosphere)
+#library(terra)
+#library(geosphere)
 library(RSQLite)
 library(DBI)
 library(chron)
@@ -63,12 +62,16 @@ library(chron)
 ## set directories ##
 
 # Recording and input directories
-prnt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2023/MKSC" # Base folder with recordings present 
+
+# "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract"
+# "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/2023_WLRS_Contract/processing/2022_Nawhitti"
+
+prnt.source = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2022/MKVI" # Base folder with recordings present 
 
 # MetaData and output directories
 base.meta.dir = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData" 
 GPS.Locs = file.path(base.meta.dir,"External","20231011_Location_Info.csv") # aru locations
-jpg.dir = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/schedule_visualizations" # images for rec schedule review
+jpg.dir = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2022/MKVI" # images for rec schedule review
 
 # set location for metadata Database
 db.path = "S:/Projects/107182-01/06 Data/ARU processing/meta_data"
@@ -87,8 +90,6 @@ source("sourced_Functions/Or_Seconds_20000101_Function.R")
 file.types = c(".wav",".wac",".mp3",".flac",".w4v")
 
 
-
-
 ############################
 ##### ~~~~ PART 1 ~~~~ #####
 #### Extract metadata ######
@@ -101,11 +102,30 @@ file.types = c(".wav",".wac",".mp3",".flac",".w4v")
 # List audio files
 all.recs = data.frame(Full = list.files(prnt.source,recursive = T,full.names = T, pattern = paste(as.character(file.types),collapse = "|"))) # full names of directories present
 
+# multiplefolders
+
+prnt.source = c("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2022/MKVI/MKVI-04",
+                "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD/2022/MKVI/MKVI-06")
+
+for (i in 1:length(prnt.source)){
+  
+  stn.recs = data.frame(Full = list.files(prnt.source[i],recursive = T,full.names = T, pattern = ".wav")) # full names of directories present
+
+  if(i==1){all.recs = stn.recs}else(all.recs = rbind(all.recs,stn.recs))
+  
+}
+
+all.recs = data.frame(Full = list.files(prnt.source,recursive = T,full.names = T, pattern = ".wav")) # full names of directories present
+
+all.recs.run = all.recs %>% filter(row(all.recs)>1)
+
+
+some.recs = all.recs[basename(dirname(all.recs$Full)) %in% c("MKVI-04","MKVI-06"),]
 
 
 ### get meta data for recordings 
 # Step 1 - extract WAMD and GUANO encoded meta data
-meta_alt = plyr::mdply(all.recs$Full, # 
+meta_alt = plyr::mdply(all.recs.run$Full[3], # 
                        Get_wamd_guan,
                        .progress=plyr::progress_text(style = 3))
 
@@ -147,6 +167,12 @@ for (i in 1:nrow(remove)){
   
 }
 
+
+# exclude the recordings you dont want to use
+# this will remove all these recordings from the lists so you should move them before you go any further 
+# validate that these are indeed corrupted (or otherwise should not be included)
+all.recs.use = data.frame(Full = all.recs[!all.recs$Full %in% remove$old.name,])
+
 # now extract the exif data
 
 
@@ -158,7 +184,7 @@ exif_keep = c("SourceFile","NumChannels","BitsPerSample","FileSize","SampleRate"
 
 ## IF you have a lot of files, this may take some time. Be aware of this 
 # apply across dataset
-meta_exif = plyr::mdply(all.recs$Full, 
+meta_exif = plyr::mdply(all.recs.use$Full, 
                         
                         .fun = function(x) {exifr::read_exif(x, tags = exif_keep)},
                         
@@ -198,6 +224,8 @@ get.NAs = function(df){
 }
 
 na.counts = get.NAs(meta_full)
+
+
 
 ## start by seeing what patterns are occuring regarding NA counts (consistencies between models and units etc)
 # Check this by looking at the na.counts manually (ordered by number of occurances)
@@ -245,7 +273,7 @@ meta = meta_save[keep]
 
 
 ## 
-dir.create(dirname("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Results/Tracking/BIRD/2023/MKSC/2023_BIRD_MKSC_Meta_Data_Recordings.csv"),recursive = T)
+dir.create(dirname("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Results/Tracking/BIRD/2023/MKVI/2023_BIRD_MKVI_Meta_Data_Recordings.csv"),recursive = T)
 # write.csv(meta,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Results/Tracking/BIRD/2023/MKSC/2023_BIRD_MKSC_Meta_Data_Recordings.csv")
 
 
@@ -703,6 +731,7 @@ redun_name_status(meta = meta)
 ##### Create Database ######
 ############################
 
+
 # set location for Database
 meta.db = dbConnect(RSQLite::SQLite(),file.path(db.path,"20231022_Meta_Database.sqlite"))
 
@@ -753,6 +782,12 @@ meta.db = dbConnect(RSQLite::SQLite(),file.path(db.path,"20231022_Meta_Database.
 meta_2 = dbReadTable(meta.db,"metadata") # read the file
 
 
+dbDisconnect(meta.db)
+
+# Remove anything that you don't want to deal with 
+meta_2 = meta_2[meta_2$real_prefix %in% meta$real_prefix,]
+
+
 ## **Caution** ~ Time calculations crossing over the daylight savings shift will come out as NAs unless timezone set to "ETC/GMT+7" or "ETC/GMT-9" etc.
 ## **Important** ~ In "ETC/GMT+7", 7 refers to the timezone offset (+/-0700) but the (+/-) is reversed, here the timezone is PDT/MST (-0700) even though the sign is +
 
@@ -784,17 +819,17 @@ colnames(meta_2)[colnames(meta_2)=="real_prefix"] <- c("station")
 # new column for recording status 
 meta_2$status = "recording"
 
-(length)
+
 # Create an end time for each recording 
 meta_2$end_time = NA
 
 # test settings
-start = meta_2$form_tstamp[i]
-format = "%Y-%m-%d %H:%M:%S%z"
-timezone = meta_2$tzone_R[i]
-length = meta_2$calc_length[i]
+# start = meta_2$form_tstamp[i]
+# format = "%Y-%m-%d %H:%M:%S%z"
+# timezone = meta_2$tzone_R[i]
+# length = meta_2$calc_length[i]
+# 
 
-lubridate::seconds(10)
 
 get_end_time = function(start,format,timezone,length){
   
@@ -805,7 +840,9 @@ get_end_time = function(start,format,timezone,length){
   return(end)
   
 }
-i=1
+
+
+#i=1
 for (i in 1:nrow(meta_2)){
   
   meta_2$end_time[i] = get_end_time(meta_2$form_tstamp[i],"%Y-%m-%d %H:%M:%S%z",meta_2$tzone_R[i],meta_2$calc_length[i])
@@ -818,18 +855,18 @@ colnames(meta_2)[colnames(meta_2)=="form_tstamp"] = "start_time"
 
 
 ## if you want to create jpegs with this, set the following to 'make'
-make.jpgs = "no" # either use "make", if you want them made,or write literally anything else if you don´t want them made
+make.jpgs = "make" # either use "make", if you want them made,or write literally anything else if you don´t want them made
 period.labels = "no" # either use "make", if you want the length of the pauses/recording sessions printed next to the recording plot
                     # or write literally anything else if you don´t want them made
 
 # sort by 'station', 'ynight' to create new df with sessions and pauses in them
 
 # test with 1 first
-
-station = unique(meta_2$station)[1]
-meta_stn = meta_2[meta_2$station == station,]
-ynight = unique(meta_stn$ynight)[1]
-meta_night = meta_stn[meta_stn$ynight == ynight,]
+# 
+# station = unique(meta_2$station)[1]
+# meta_stn = meta_2[meta_2$station == station,]
+# ynight = unique(meta_stn$ynight)[1]
+# meta_night = meta_stn[meta_stn$ynight == ynight,]
 
 
 
@@ -1096,7 +1133,7 @@ for (station in unique(meta_2$station)){
 #### save file for next script
 
 
-write.csv(sessions,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData/Recording/2023_MKSC__Meta.csv",row.names = F)
+write.csv(sessions,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData/Recording/2023_MKVI__Meta.csv",row.names = F)
 
 
 ############################
