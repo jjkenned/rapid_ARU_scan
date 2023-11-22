@@ -122,6 +122,29 @@ all.recs.run = all.recs %>% filter(row(all.recs)>1)
 
 some.recs = all.recs[basename(dirname(all.recs$Full)) %in% c("MKVI-04","MKVI-06"),]
 
+# sample for each 
+all.recs$station = basename(dirname(all.recs$Full))
+
+for (station in unique(all.recs$station)){
+  
+  if (station == unique(all.recs$station)[1]){
+    
+    
+    sub.recs = head(all.recs[all.recs$station == station,],n=5)
+      
+    
+  } else {
+    
+    sub.recs = rbind(sub.recs,head(all.recs[all.recs$station == station,],n=5))
+    
+  }
+  
+  print(station)
+  
+  
+}
+
+
 
 ### get meta data for recordings 
 # Step 1 - extract WAMD and GUANO encoded meta data
@@ -785,8 +808,21 @@ meta_2 = dbReadTable(meta.db,"metadata") # read the file
 dbDisconnect(meta.db)
 
 # Remove anything that you don't want to deal with 
-meta_2 = meta_2[meta_2$real_prefix %in% meta$real_prefix,]
+#meta_2 = meta_2[meta_2$real_prefix %in% meta$real_prefix,]
 
+## Subset data here incase you dont want to process everything
+# meta_2 = meta_2[meta_2$real_transect=="MKVI-04",]
+
+
+## compare with current subset of recordings
+#recs = data.frame(full = list.files("F:/PMRA_SAR/Recordings/BIRD/2023/MKVI/MKVI-04",full.names = T,recursive = T,pattern = ".wav"))
+
+#recs$basename = basename(recs$full)
+
+#meta_2$real_base = basename(meta_2$filename)
+
+# list of missing
+#recs.missing = recs[!recs$basename %in% meta_2$real_base,]
 
 ## **Caution** ~ Time calculations crossing over the daylight savings shift will come out as NAs unless timezone set to "ETC/GMT+7" or "ETC/GMT-9" etc.
 ## **Important** ~ In "ETC/GMT+7", 7 refers to the timezone offset (+/-0700) but the (+/-) is reversed, here the timezone is PDT/MST (-0700) even though the sign is +
@@ -822,6 +858,11 @@ meta_2$status = "recording"
 
 # Create an end time for each recording 
 meta_2$end_time = NA
+
+### remove anything you dont want to deal with right now
+
+
+
 
 # test settings
 # start = meta_2$form_tstamp[i]
@@ -1133,7 +1174,7 @@ for (station in unique(meta_2$station)){
 #### save file for next script
 
 
-write.csv(sessions,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData/Recording/2023_MKVI__Meta.csv",row.names = F)
+write.csv(sessions,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData/Recording/2023_All_Meta_Nov15.csv",row.names = F)
 
 
 ############################
@@ -1150,7 +1191,11 @@ full.meta$base.name = basename(full.meta$filename)
 
 
 # review full meta for patterns
-check = data.frame(full.meta[nchar(full.meta$base.name) == 35,])
+check = full.meta %>% group_by(station,model) %>% summarise(format.char = nchar(base.name))
+
+check.all = data.frame(unique(check))
+
+
 
 ## Create column for each alternate name you require
 # start with basic renames 
@@ -1158,7 +1203,7 @@ full.meta$name.basic = NA
 full.meta$name.basic.tz = NA
 
 
-i=2940
+# i=2940
 for (i in 1:nrow(full.meta)){
   
   full.name = full.meta$filename[i]
@@ -1208,12 +1253,32 @@ for (i in 1:nrow(full.meta)){
                                   start_time = "2000-01-01 00:00:00",
                                   tzone = full.meta$tzone[i],
                                   tzone_R = full.meta$tzone_R[i])
+   
+   full.meta$start.to.sunset[i] = as.numeric(strptime(full.meta$start_time[i],format = time_format,full.meta$tzone_R[i]) - strptime(full.meta$sunsettime[i],format = time_format,full.meta$tzone_R[i]),units = "secs")
+   
+   full.meta$start.to.sunrise[i] = as.numeric(strptime(full.meta$sunrisetime[i],format = time_format,full.meta$tzone_R[i]) - strptime(full.meta$start_time[i],format = time_format,full.meta$tzone_R[i]),units = "secs")
+   
+   
 }
 
 
+# double check formats again
+check.2 = full.meta %>% group_by(station,model) %>% summarise(format.base = nchar(base.name),
+                                                              format.basic = nchar(name.basic),
+                                                              format.w.tz = nchar(name.basic.tz))
+
+check.2 = data.frame(unique(check.2))
 
 
+# Calculate time before and after sunset and sunrise
+# use 6000 as cutoff for seconds before sunrise (1 and 2/3 hrs)
+full.meta.use = full.meta[full.meta$start.to.sunset > -6000 & full.meta$start.to.sunrise > -6000,]
+dont.use = full.meta[full.meta$start.to.sunset < -6000 | full.meta$start.to.sunrise < -6000,]
+
+same.date = dont.use[as.Date(dont.use$sunrisetime) == as.Date(dont.use$sunsettime),]
+same.check = full.meta[as.Date(full.meta$sunrisetime) == as.Date(full.meta$sunsettime),]
 # You will need to start by setting the start time you wanna use
+
 
 start.hr = 0
 start.min = 0
@@ -1223,17 +1288,16 @@ start.sec = 0
 # testing presets
 
 station = "MKSC-03-S02" # unique(full.meta$station)[2]
-meta_stn = full.meta[full.meta$station == station,]
+meta_stn = full.meta.use[full.meta.use$station == station,]
 meta_stn = meta_stn[order(meta_stn$or.secs),]
 night = "8487" #unique(meta_stn$ynight)[1]
 night_dat = meta_stn[meta_stn$ynight == night,]
 
 
-
 # 
-for (station in unique(full.meta$station)){
+for (station in unique(full.meta.use$station)){
   
-  meta_stn = full.meta[full.meta$station == station,]
+  meta_stn = full.meta.use[full.meta.use$station == station,]
   
   # sort station ID by time
   meta_stn = meta_stn[order(meta_stn$or.secs),]
@@ -1245,12 +1309,7 @@ for (station in unique(full.meta$station)){
     
     night_dat$new.start = NA
     
-    substr(night_dat$start_time,12,13)
-    
-    
-    # filter for mid-day recordings, should be earlier
-    # night_dat = night_dat[as.numeric(substr(night_dat$start_time,12,13))>15 | as.numeric(substr(night_dat$start_time,12,13))<11,]
-    
+
     # loop across to rename each individually
     # i=2
     for (i in 1:nrow(night_dat)){
@@ -1289,7 +1348,7 @@ for (station in unique(full.meta$station)){
     
   }
   
-  if (station == unique(full.meta$station)[1]) {dat_out = data.frame(night_out)} else (dat_out = rbind(dat_out,data.frame(night_out)))
+  if (station == unique(full.meta.use$station)[1]) {dat_out = data.frame(night_out)} else (dat_out = rbind(dat_out,data.frame(night_out)))
   
   print(paste0("Completed ",station))
   
@@ -1301,17 +1360,15 @@ for (station in unique(full.meta$station)){
 
 
 ## you may run into file issues here
+check = dat_out %>% group_by(station,name.basic,model,new.start) %>% summarise(format.time = nchar(new.start))
 
-check = dat_out[dat_out$new.start=="NA-0700",]
-
+check.2 = dat_out[dat_out$new.start=="NA-0700",]
 ## check which files arent supposed to be part of the schedule
-
-
-Should.remove = full.meta[as.numeric(substr(full.meta$start_time,12,13))<=15 & as.numeric(substr(full.meta$start_time,12,13))>=11,]
+# Should.remove = full.meta[as.numeric(substr(full.meta$start_time,12,13))<=15 & as.numeric(substr(full.meta$start_time,12,13))>=11,]
 
 
 # make new ldfcs name
-time = dat_out$new.start[1]
+# time = dat_out$new.start[1]
 time.to.name = function(time){
   
   
@@ -1337,7 +1394,7 @@ dat_out$name.ldfcs = paste0(dat_out$station,"_",time.to.name(dat_out$new.start),
 
 
 
-write.csv(dat_out,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData/Recording/2023_MKSC__All_meta_and_names_missing_short_recs.csv",row.names = F)
+write.csv(dat_out,file = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/MetaData/Recording/2023_All_meta_and_names_for_analysis.csv",row.names = F)
 
 
 

@@ -27,8 +27,8 @@ library(tidyverse)
 
 # group = "MKSC-U01-006"
 
-dir_sep = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD/2023/MKSC/by_night/MKSC-02" # where the files are kept
-dir_return = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2023/MKSC/MKSC-02" # where the combined files are to go
+dir_sep = "F:/PMRA_SAR/Processing/indices/BIRD/2023/MKVI/by_night/MKVI-24" # where the files are kept
+dir_return = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Timelapse_files/LDFCS/BIRD/2023/MKVI/MKVI-24" # where the combined files are to go
 
 
 

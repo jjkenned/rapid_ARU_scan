@@ -24,6 +24,8 @@ library(stringr)
 library(tidyverse)
 library(lubridate)
 
+lubridate::seconds()
+chron::seconds()
 
 
 ####  working spaces
@@ -39,8 +41,9 @@ meta = read.csv(file.path(source.dir,db.name),stringsAsFactors = F)
 
 
 # timezone extract
-test = as.POSIXct(meta$date_time[1])
+pos.time = as.POSIXct(meta$date_time[1],format = time_format,tz = "Etc/GMT+7")
 
+sttime = strptime(meta$date_time[1],format = time_format,tz = "Etc/GMT+7")
 
 
 ### ~~~~~~~~~~~~~~ ###
@@ -119,7 +122,11 @@ meta$tzone_R = lapply(meta$timezone,FUN = R_timezone)
 
 
 
+
+
 test = strptime(meta$date_time[1],format = time_format,tz = meta$tzone_R[1])
+
+
 test.character = strftime(test,format = time_format,tz = meta$tzone_R[1])
 
 

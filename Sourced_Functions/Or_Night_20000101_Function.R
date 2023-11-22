@@ -4,17 +4,17 @@
 # this requires lubridate for yday function
 
 
-or.night = function(date,cutoff_hr,start_day,tzone){
+or.night = function(date,cutoff_hr,start_day,tzone,time_format){
   
   # get lubridate
   require(lubridate)
-  date = strptime(date,format = "%Y-%m-%d %H:%M:%S%z",tz = tzone)
+  date = strptime(date,format = time_format,tz = tzone)
   
   # days since that start date
   or_date = floor(as.numeric(difftime(date, strptime(start_day,format = "%Y-%m-%d",tz = tzone),units = "days")))
   
   # and hour
-  hour = hour(date)
+  hour = lubridate::hour(date)
   
   # part 2 compares these values
   if (hour<cutoff_hr){or_night = or_date

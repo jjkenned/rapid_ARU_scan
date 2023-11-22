@@ -15,7 +15,6 @@
 
 # Re-set  your script when needed
 dev.off()
-
 rm(list=ls())
 
 # libraries
@@ -37,9 +36,9 @@ transect = "MKVI-04"
 region = substr(transect,1,4)
 year = "2023"
 
-ind.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD"
-rec.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Recordings/BIRD"
-results.root = "S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/Name_Change_Tracking/BIRD"
+ind.root = "F:/PMRA_SAR/Processing/BIRD"
+rec.root = "F:/PMRA_SAR/Recordings/BIRD"
+results.root = "F:/PMRA_SAR/Processing/Name_Change_Tracking/BIRD"
 
 ind.path = file.path(ind.root,year,region,"by_rec",transect)
 rec.path = file.path(rec.root,year,region,transect)
@@ -60,7 +59,9 @@ db.name = "20231022_Meta_Database.sqlite"
 paths = fs::dir_info(path = ind.path,recurse = 2) %>% # two depth 
   as_tibble() %>% 
   filter(blocks==0) %>% # set block allocation to 0
+  filter(grepl(".wav",path,ignore.case = T)) %>%
   select(c("path")) # keep only path 
+
 colnames(paths) = "ind.path"
 
 
@@ -80,6 +81,9 @@ nrow(paths) == nrow(recs)
 # now combine by the basename of the files 
 paths$basename = basename(paths$ind.path) # Base name of indices folder
 recs$basename = basename(recs$rec.path)
+
+# check
+check = paths[!paths$basename %in% recs$basename,]
 
 pathstest = merge(paths,recs,by = "basename")
 
@@ -108,7 +112,7 @@ meta.db = dbConnect(RSQLite::SQLite(),file.path(db.path,db.name))
 
 # check status ~ if new, will get no info
 dbListTables(conn = meta.db)
-meta = as.data.frame(meta)
+meta = dbReadTable(meta.db,"metadata")
 
 
 
@@ -255,8 +259,8 @@ dat_out$new_name_final = paste0(dat_out$station,"_",dat_out$year,
 
 ###
 # Save this massive list 
-dir.create(results.root,recursive = T)
-write.table(dat_out,file = paste0(results.root,"/Old_New_NameConverstions.txt"),sep = "\t",col.names = T,row.names = F)
+# dir.create(results.root,recursive = T)
+# write.table(dat_out,file = paste0(results.root,"/Old_New_NameConverstions.txt"),sep = "\t",col.names = T,row.names = F)
 
 # read data if needed to re-run
 # dat_out = read.table("S:/ProjectScratch/398-173.07/PMRA_WESOke/PMRA_SAR/Processing/BIRD/2023/MKSC/by_rec/MKSC-01/new_name_indices/Old_New_NameConverstions.txt",sep = "\t",header = T)
